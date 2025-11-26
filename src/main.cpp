@@ -42,13 +42,19 @@ int main()
     // 3. 事件响应
     glfwSetFramebufferSizeCallback(window, FrameBufferSizeCallback); // 监听窗口大小变化事件
     glfwSetKeyCallback(window, KeyCallback); // 监听键盘输入事件
-    // 4. 执行窗体循环
+    // 4. 初始化GLAD,加载当前OpenGL的所有函数
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        std::cout << "Failed to initialize GLAD" << std::endl;
+        return -1;
+    }
+    // 5. 执行窗体循环
     while (!glfwWindowShouldClose(window)) // 检查是否需要关闭窗口
     {
         glfwSwapBuffers(window); // 交换缓冲区，将渲染结果显示在窗口上
         glfwPollEvents(); // 处理事件，如键盘输入、鼠标移动等
     }
-    // 5. 退出程序,清理GLFW环境,释放资源
+    // 6. 退出程序,清理GLFW环境,释放资源
     glfwDestroyWindow(window); // 销毁窗口对象
     glfwTerminate(); // 终止GLFW环境，释放资源
 

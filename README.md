@@ -3,9 +3,9 @@
 
 > **参考链接**
 > * https://learnopengl-cn.readthedocs.io/zh/latest/
-> * https://study.xiaoe-tech.com/#/muti_index
+> * https://ai.feishu.cn/docx/W6Eod11C2onvCdxa347crqWunPh
 >
-> **所需库**
+> **依赖库**
 > * [GLFW](https://www.glfw.org/) : 个专门针对OpenGL的C语言库,它提供了一些渲染物体所需需的最低限度的接口，如创建窗口、处理输入事件等。
 > * [GLAD](https://glad.dav1d.de/) : 根据不同的OpenGL版本,它提供了不同的函数指针,可以在不同的平台上使用，如在Windows上使用OpenGL 4.5,在macOS上使用OpenGL 4.1等。
 > * [GLEW](https://glew.sourceforge.net/) : 是一个跨平台的C++库,它提供了OpenGL的扩展功能，如加载OpenGL扩展函数指针等。
