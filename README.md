@@ -1,4 +1,4 @@
-# Learn OpenGL
+# Learn OpenGL(Version 4.6)
 
 
 > **参考链接**
