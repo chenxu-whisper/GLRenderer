@@ -1,6 +1,7 @@
 #ifndef APPLICATON_H
 #define APPLICATION_H
 
+// 应用实例访问宏
 #define APP Application::GetInstance()
 
 // 前置声明GLFWwindow，避免包含GLFW头文件
@@ -18,8 +19,7 @@ public:
     // 获取单例实例
     static Application* GetInstance();
     // 初始化窗口
-    bool WindowInit(const uint8_t& major = 4, const uint8_t& minor = 6,
-                    const uint32_t& width = 800, const uint32_t& height = 600, const char* title = "Window");
+    bool WindowInit(const uint8_t& major = 4, const uint8_t& minor = 6, const uint32_t& width = 800, const uint32_t& height = 600, const char* title = "Window");
     // 更新窗口
     bool WindowUpdate() const;
     // 销毁窗口
@@ -59,6 +59,7 @@ private:
     GLFWwindow* mWindow = nullptr;
     uint32_t mWidth = 0;
     uint32_t mHeight = 0;
+    const char* mTitle = nullptr;
     // 事件响应
     ResizeCallback mResizeCallback = nullptr;
     KeyBoardCallback mKeyCallback = nullptr;

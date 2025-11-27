@@ -7,12 +7,11 @@
 // 窗体参数
 #define MAJOR_VERSION 4 // OpenGL主版本号
 #define MINOR_VERSION 6 // OpenGL次版本号
-#define WINDOW_TITLE "GLRenderer Window" // 窗口标题
 #define WINDOW_WIDTH 800  // 窗口宽度
 #define WINDOW_HEIGHT 600 // 窗口高度
+#define WINDOW_TITLE "GLRenderer Window"  // 窗口标题
 #define VIEWPORT_WIDTH 800  // 视口宽度
 #define VIEWPORT_HEIGHT 600 // 视口高度
-
 
 void OnWindowResizeEvent(int width, int height)
 {

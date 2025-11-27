@@ -18,11 +18,11 @@ Application* Application::GetInstance()
     return mInstance;
 }
 
-bool Application::WindowInit(const uint8_t& major, const uint8_t& minor,
-                       const uint32_t& width, const uint32_t& height, const char *title)
+bool Application::WindowInit(const uint8_t& major, const uint8_t& minor, const uint32_t& width, const uint32_t& height, const char *title)
 {
     mWidth = width;
     mHeight = height;
+    mTitle = title;
 
     // 初始化GLFW的基本环境
     glfwInit();
@@ -48,6 +48,12 @@ bool Application::WindowInit(const uint8_t& major, const uint8_t& minor,
         std::cout << "Failed to initialize GLAD" << std::endl;
         return false;
     }
+
+    // 初始化时设置带尺寸的窗口标题，格式为："窗口标题 (宽度 x 高度)"
+    // todo: 与FramebufferSizeCallback重复，待优化
+    char initialTitle[256];
+    snprintf(initialTitle, sizeof(initialTitle), "%s (%d x %d)", title, width, height);
+    glfwSetWindowTitle(mWindow, initialTitle);
 
     // 事件响应
     glfwSetFramebufferSizeCallback(mWindow, FramebufferSizeCallback); // 窗口大小改变回调函数
@@ -89,12 +95,17 @@ void Application::SetKeyCallback(KeyBoardCallback callback) { mKeyCallback = cal
 
 void Application::FramebufferSizeCallback(GLFWwindow *window, int width, int height)
 {
-    std::cout << "Framebuffer size: " << width << " x " << height << std::endl;
-
     // 获取当前应用实例指针
     Application* self = static_cast<Application*>(glfwGetWindowUserPointer(window));
     if (self != nullptr)
+    {
+        // 使用保存的标题参数
+        char title[256];
+        snprintf(title, sizeof(title), "%s (%d x %d)", self->mTitle, width, height);
+        glfwSetWindowTitle(window, title);
+
         self->mResizeCallback(width, height);
+    }
 }
 
 void Application::KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
