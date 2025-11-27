@@ -1802,11 +1802,12 @@ static void find_coreGL(void) {
 }
 
 int gladLoadGLLoader(GLADloadproc load) {
-	GLVersion.major = 0; GLVersion.minor = 0;
-	glGetString = (PFNGLGETSTRINGPROC)load("glGetString");
+	GLVersion.major = 0; GLVersion.minor = 0; // 初始化OpenGL版本为0.0
+	glGetString = (PFNGLGETSTRINGPROC)load("glGetString"); // 获取OpenGL版本字符串
 	if(glGetString == NULL) return 0;
 	if(glGetString(GL_VERSION) == NULL) return 0;
-	find_coreGL();
+	find_coreGL(); // 查找OpenGL版本
+	// 将当前及以下版本的OpenGL函数加载到 glad 中
 	load_GL_VERSION_1_0(load);
 	load_GL_VERSION_1_1(load);
 	load_GL_VERSION_1_2(load);
