@@ -56,8 +56,11 @@ bool Application::WindowInit(const uint8_t& major, const uint8_t& minor, const u
     glfwSetWindowTitle(mWindow, initialTitle);
 
     // 事件响应
-    glfwSetFramebufferSizeCallback(mWindow, FramebufferSizeCallback); // 窗口大小改变回调函数
-    glfwSetKeyCallback(mWindow, KeyCallback); // 键盘输入回调函数
+    glfwSetFramebufferSizeCallback(mWindow, FramebufferSizeCallbackFunc); // 窗口大小改变回调函数
+    glfwSetKeyCallback(mWindow, KeyCallbackFunc); // 键盘输入回调函数
+    glfwSetMouseButtonCallback(mWindow, MouseButtonCallbackFunc); // 鼠标按钮回调函数
+    glfwSetCursorPosCallback(mWindow, MouseMoveCallbackFunc); // 鼠标移动回调函数
+    glfwSetScrollCallback(mWindow, MouseScrollCallbackFunc); // 鼠标滚轮回调函数
 
     // 设置窗口用户指针,将当前应用实例指针绑定到窗口上
     glfwSetWindowUserPointer(mWindow, this);
@@ -88,12 +91,15 @@ void Application::WindowDestroy() const
 
 }
 
-// 事件响应：窗口大小改变
-void Application::SetResizeCallback(ResizeCallback callback) { mResizeCallback = callback; }
-// 事件响应：键盘输入
-void Application::SetKeyCallback(KeyBoardCallback callback) { mKeyCallback = callback; }
+// 事件响应
+void Application::SetResizeCallback(ResizeCallback callback) { mResizeCallback = callback; } // 窗口大小改变回调函数
+void Application::SetKeyCallback(KeyBoardCallback callback) { mKeyCallback = callback; }  // 键盘输入回调函数
+void Application::SetMouseButtonCallback(MouseButtonCallback callback) { mMouseButtonCallback = callback; } // 鼠标按钮回调函数
+void Application::SetMouseMoveCallback(MouseMoveCallback callback) { mMouseMoveCallback = callback; } // 鼠标移动回调函数
+void Application::SetMouseScrollCallback(MouseScrollCallback callback) { mMouseScrollCallback = callback; } // 鼠标滚轮回调函数
 
-void Application::FramebufferSizeCallback(GLFWwindow *window, int width, int height)
+// 回调函数实现
+void Application::FramebufferSizeCallbackFunc(GLFWwindow *window, int width, int height)
 {
     // 获取当前应用实例指针
     Application* self = static_cast<Application*>(glfwGetWindowUserPointer(window));
@@ -108,9 +114,30 @@ void Application::FramebufferSizeCallback(GLFWwindow *window, int width, int hei
     }
 }
 
-void Application::KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
+void Application::KeyCallbackFunc(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
     Application* self = static_cast<Application*>(glfwGetWindowUserPointer(window));
     if (self != nullptr)
         self->mKeyCallback(key, scancode, action, mods);
+}
+
+void Application::MouseButtonCallbackFunc(GLFWwindow* window, int button, int action, int mods)
+{
+    Application* self = static_cast<Application*>(glfwGetWindowUserPointer(window));
+    if (self != nullptr && self->mMouseButtonCallback != nullptr)
+        self->mMouseButtonCallback(button, action, mods);
+}
+
+void Application::MouseMoveCallbackFunc(GLFWwindow* window, double xpos, double ypos)
+{
+    Application* self = static_cast<Application*>(glfwGetWindowUserPointer(window));
+    if (self != nullptr && self->mMouseMoveCallback != nullptr)
+        self->mMouseMoveCallback(xpos, ypos);
+}
+
+void Application::MouseScrollCallbackFunc(GLFWwindow* window, double xoffset, double yoffset)
+{
+    Application* self = static_cast<Application*>(glfwGetWindowUserPointer(window));
+    if (self != nullptr && self->mMouseScrollCallback != nullptr)
+        self->mMouseScrollCallback(xoffset, yoffset);
 }

@@ -10,6 +10,9 @@ class GLFWwindow;
 // 事件响应
 using ResizeCallback = void(*)(int width, int height); // 窗口大小改变回调函数
 using KeyBoardCallback = void(*)(int key, int scancode, int action, int mods); // 键盘输入回调函数
+using MouseButtonCallback = void(*)(int button, int action, int mods); // 鼠标按钮回调函数
+using MouseMoveCallback = void(*)(double xpos, double ypos); // 鼠标移动回调函数
+using MouseScrollCallback = void(*)(double xoffset, double yoffset); // 鼠标滚轮回调函数
 
 // 单例模式
 class Application
@@ -28,6 +31,11 @@ public:
     void SetResizeCallback(ResizeCallback callback);
     // 设置键盘输入回调函数
     void SetKeyCallback(KeyBoardCallback callback);
+    // 添加鼠标事件回调函数设置
+    void SetMouseButtonCallback(MouseButtonCallback callback);
+    void SetMouseMoveCallback(MouseMoveCallback callback);
+    void SetMouseScrollCallback(MouseScrollCallback callback);
+
 
 private:
     /* @note: 需要用static，静态成员函数没有隐式的this指针（C++类内函数指针）:
@@ -41,14 +49,34 @@ private:
      *@param width: 窗口宽度
      *@param height: 窗口高度
      */
-    static void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
+    static void FramebufferSizeCallbackFunc(GLFWwindow* window, int width, int height);
     /* 键盘输入回调函数
      *@param key: 键盘键值
      *@param scancode: 键盘扫描码
      *@param action: 键盘操作类型(GLFW_PRESS, GLFW_RELEASE, GLFW_REPEAT)
      *@param mods: 键盘修饰键(GLFW_MOD_SHIFT, GLFW_MOD_CONTROL, GLFW_MOD_ALT, GLFW_MOD_SUPER)
      */
-    static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+    static void KeyCallbackFunc(GLFWwindow* window, int key, int scancode, int action, int mods);
+    /* 鼠标按钮回调函数
+    *@param window: 窗口对象指针
+    *@param button: 鼠标按钮
+    *@param action: 操作类型
+    *@param mods: 修饰键
+    */
+    static void MouseButtonCallbackFunc(GLFWwindow* window, int button, int action, int mods);
+    /* 鼠标移动回调函数
+     *@param window: 窗口对象指针
+     *@param xpos: X坐标位置
+     *@param ypos: Y坐标位置
+     */
+    static void MouseMoveCallbackFunc(GLFWwindow* window, double xpos, double ypos);
+    /* 鼠标滚轮回调函数
+     *@param window: 窗口对象指针
+     *@param xoffset: X方向偏移
+     *@param yoffset: Y方向偏移
+     */
+    static void MouseScrollCallbackFunc(GLFWwindow* window, double xoffset, double yoffset);
+
 
 private:
     // 构造函数设为私有，防止外部实例化
@@ -63,6 +91,9 @@ private:
     // 事件响应
     ResizeCallback mResizeCallback = nullptr;
     KeyBoardCallback mKeyCallback = nullptr;
+    MouseButtonCallback mMouseButtonCallback = nullptr;
+    MouseMoveCallback mMouseMoveCallback = nullptr;
+    MouseScrollCallback mMouseScrollCallback = nullptr;
 };
 
 
