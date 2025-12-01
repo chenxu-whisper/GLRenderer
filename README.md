@@ -16,8 +16,14 @@
 ---
 
 ### 词义解析
+#### OpenGL上下文（Context）
+* **定义**：OpenGL上下文是一个对象,它包含了OpenGL运行环境的所有状态信息,如当前绑定的顶点数组对象、当前使用的着色器程序、当前设置的视口大小等。
+* **作用**：OpenGL上下文是OpenGL运行环境的核心,它负责管理OpenGL的状态,并根据状态执行渲染操作。：是 OpenGL的“物理载体”，解决“在哪里运行”的问题（提供资源和环境）。
+* **本质**：一块独立的、包含 OpenGL 所有运行所需资源的内存区域，是连接 CPU 代码与 GPU 的 “桥梁”。
+
 #### OpenGL状态机（State Machine）
 * **定义**：OpenGL运行环境是一个大的状态机,每一个函数都会改变状态机的状态或者触发其执行某个行为。是一种 “存储当前状态 + 响应输入触发状态转换” 的系统。
+* * **作用**：是OpenGL的“逻辑规则”，解决“如何运行”的问题（操作依赖当前状态）。
 * **核心分类**：OpenGL 的状态可分为三大类，覆盖了渲染的全流程：
   * **渲染配置状态**：启用 / 禁用深度测试（`glEnable(GL_DEPTH_TEST)`）、混合模式（`glBlendFunc`）、面剔除（`glCullFace`）等。
   * **资源绑定状态**：当前绑定的顶点数组对象（VAO）、顶点缓冲（VBO）、纹理（`glBindTexture`）、着色器程序（`glUseProgram`）等。
@@ -42,3 +48,34 @@
 * **定义**：在后台缓冲完成完整画面的绘制后，通过缓冲交换将后缓冲的内容一次性替换到前缓冲，避免用户看到 “半完成的绘制过程”，从而消除闪烁。
   * 前缓冲（Front Buffer）：当前正在显示器上显示的缓冲，用户看到的画面来自此缓冲。
   * 后缓冲（Back Buffer）：后台用于绘制的缓冲，所有渲染命令（如`glDrawArrays`）都会先输出到后缓冲。
+
+#### VBO（Vertex Buffer Object，顶点缓冲对象）
+* **作用**：用于存储顶点数据的缓冲对象。它将顶点数据（坐标、颜色、纹理坐标、法线等）从CPU内存转移到GPU显存, 避免每次绘制时重复传输数据，大幅提升渲染效率。在C++中表现为一个unsigned int类型，为GPU端内存对象的一个ID编号。
+* **工作流程**：
+    1. **创建VBO**：调用`glGenBuffers`生成一个VBO ID（这时还没有分配显存空间, 只是在CPU端创建了一个ID）。
+    2. **绑定VBO**：调用`glBindBuffer(GL_ARRAY_BUFFER, vboID)`将VBO绑定到`GL_ARRAY_BUFFER`目标上。
+    3. **上传数据**：调用`glBufferData(GL_ARRAY_BUFFER, size, data, usage)`将顶点数据上传到VBO中。
+    4. **配置顶点属性指针**：调用`glVertexAttribPointer(index, size, type, normalized, stride, offset)`配置顶点属性指针, 告诉OpenGL如何从VBO中读取数据。
+    5. **启用顶点属性数组**：调用`glEnableVertexAttribArray(index)`启用顶点属性数组, 使OpenGL知道从VBO中读取数据。
+
+### VAO（Vertex Array Object，顶点数组对象）
+* **作用**：用于存储顶点属性配置的缓冲对象。它将顶点属性（如坐标、颜色、纹理坐标、法线等）的配置信息存储在GPU显存中, 避免每次绘制时重复配置顶点属性指针。在C++中表现为一个unsigned int类型，为GPU端内存对象的一个ID编号。
+* **工作流程**：
+    1. **创建VAO**：调用`glGenVertexArrays`生成一个VAO ID（这时还没有分配显存空间, 只是在CPU端创建了一个ID）。
+    2. **绑定VAO**：调用`glBindVertexArray(vaoID)`将VAO绑定到当前上下文。
+    3. **配置顶点属性指针**：调用`glVertexAttribPointer(index, size, type, normalized, stride, offset)`配置顶点属性指针, 告诉OpenGL如何从VBO中读取数据。
+    4. **启用顶点属性数组**：调用`glEnableVertexAttribArray(index)`启用顶点属性数组, 使OpenGL知道从VBO中读取数据。
+* **layout(location = n)**：在顶点着色器中, 使用`layout(location = n)`指定顶点属性的索引, 与`glVertexAttribPointer(index, ...)`中的`index`对应。
+  * 如`layout(location = 0)`指定了顶点坐标的索引为0, 则在`glVertexAttribPointer(0, ...)`中也需要指定索引为0。
+  * 如`layout(location = 1)`指定了颜色的索引为1, 则在`glVertexAttribPointer(1, ...)`中也需要指定索引为1。
+
+### NDC（Normalized Device Coordinates，归一化设备坐标）
+* **作用**：是OpenGL渲染管线中的一个坐标系统, 用于将顶点坐标从裁剪空间映射到屏幕空间。
+* **范围**：NDC坐标的范围是[-1, 1]，超出此范围的顶点将被裁剪掉。Y轴正方向为向上，(0, 0)坐标是这个图像的中心。
+* **计算**：NDC坐标的计算过程如下：
+    1. 将顶点坐标的每个分量除以其w分量（透视除法）。
+    2. 将结果的x、y、z分量分别映射到[-1, 1]的范围，如顶点坐标为(2, 3, 4)，则NDC坐标为(2/4, 3/4, 4/4) = (0.5, 0.75, 1.0)。
+* **工作流程**：
+    1. **顶点着色器**：在顶点着色器中, 输入的顶点坐标会被自动转换为NDC坐标。
+    2. **光栅化**：在光栅化阶段, NDC坐标会被映射到屏幕空间坐标。
+    3. **片段着色器**：在片段着色器中, 输入的屏幕空间坐标会被自动转换为归一化设备坐标。

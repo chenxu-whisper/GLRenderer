@@ -36,7 +36,6 @@ public:
     void SetMouseMoveCallback(MouseMoveCallback callback);
     void SetMouseScrollCallback(MouseScrollCallback callback);
 
-
 private:
     /* @note: 需要用static，静态成员函数没有隐式的this指针（C++类内函数指针）:
      *  1. GLFW期望的回调函数类型是GLFWframebuffersizefun，即普通函数指针void (*)(GLFWwindow*, int, int)
@@ -76,7 +75,6 @@ private:
      *@param yoffset: Y方向偏移
      */
     static void MouseScrollCallbackFunc(GLFWwindow* window, double xoffset, double yoffset);
-
 
 private:
     // 构造函数设为私有，防止外部实例化
