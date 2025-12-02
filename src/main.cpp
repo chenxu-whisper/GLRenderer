@@ -26,6 +26,33 @@ const float verties[] =
      0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f  // 顶部
 };
 
+// 顶点着色器
+const char* vertexShaderSource = R"(
+    #version 460 core
+    layout(location = 0) in vec3 aPos;
+    layout(location = 1) in vec3 aColor;
+
+    out vec3 ourColor;
+
+    void main()
+    {
+        gl_Position = vec4(aPos, 1.0);
+        ourColor = aColor;
+    }
+)";
+
+// 片段着色器
+const char* fragmentShaderSource = R"(
+    #version 460 core
+    in vec3 ourColor;
+    out vec4 FragColor;
+
+    void main()
+    {
+        FragColor = vec4(ourColor, 1.0);
+    }
+)";
+
 // 事件操作
 void OnWindowResizeEvent(int width, int height)
 {
@@ -90,7 +117,11 @@ void OnMouseScrollEvent(double xoffset, double yoffset)
     std::cout << "Mouse scroll: (" << xoffset << ", " << yoffset << ")" << std::endl;
 }
 
-void Prepare()
+
+GLuint VAO = 0;
+GLuint shaderProgram = 0;
+// 准备VAO, VBO
+void PrepareMeshData()
 {
     // 生成VBO
     GLuint VBO = 0;
@@ -107,7 +138,7 @@ void Prepare()
     CHECK_GL_ERROR(glBufferData(GL_ARRAY_BUFFER, sizeof(verties), verties, GL_STATIC_DRAW));
 
     // 生成VAO
-    GLuint VAO = 0;
+    // GLuint VAO = 0;
     CHECK_GL_ERROR(glGenVertexArrays(1, &VAO));
     // 绑定VBO到当前OpenGL状态机的当前VAO插槽
     CHECK_GL_ERROR(glBindVertexArray(VAO));
@@ -125,6 +156,74 @@ void Prepare()
     CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 
+void PrepareShader()
+{
+    // 编译顶点着色器
+    GLuint vertexShader = 0;
+    // 创建顶点着色器对象，返回编号（句柄）
+    CHECK_GL_ERROR(vertexShader = glCreateShader(GL_VERTEX_SHADER));
+    CHECK_GL_ERROR(glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr));
+    CHECK_GL_ERROR(glCompileShader(vertexShader));
+    // 检查顶点着色器编译是否成功
+    GLint success;
+    GLchar infoLog[512];
+    CHECK_GL_ERROR(glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success));
+    if (!success)
+    {
+        CHECK_GL_ERROR(glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog));
+        std::cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+
+    // 编译片段着色器
+    GLuint fragmentShader = 0;
+    // 编译片段着色器
+    CHECK_GL_ERROR(fragmentShader = glCreateShader(GL_FRAGMENT_SHADER));
+    // 设置片段着色器源码
+    CHECK_GL_ERROR(glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr));
+    // 编译片段着色器
+    CHECK_GL_ERROR(glCompileShader(fragmentShader));
+    // 检查片段着色器编译是否成功
+    CHECK_GL_ERROR(glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success));
+    if (!success)
+    {
+        CHECK_GL_ERROR(glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog));
+        std::cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+
+    // 链接着色器程序
+    // GLuint shaderProgram = 0;
+    // 创建最终可执行程序对象，返回编号（句柄）
+    CHECK_GL_ERROR(shaderProgram = glCreateProgram());
+    // 绑定顶点着色器和片段着色器到着色器程序
+    CHECK_GL_ERROR(glAttachShader(shaderProgram, vertexShader));
+    CHECK_GL_ERROR(glAttachShader(shaderProgram, fragmentShader));
+    // 链接着色器程序
+    CHECK_GL_ERROR(glLinkProgram(shaderProgram));
+    // 检查着色器程序链接是否成功
+    CHECK_GL_ERROR(glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success));
+    if (!success)
+    {
+        CHECK_GL_ERROR(glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog));
+        std::cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+    }
+
+    // 删除着色器
+    CHECK_GL_ERROR(glDeleteShader(vertexShader));
+    CHECK_GL_ERROR(glDeleteShader(fragmentShader));
+}
+
+void Render()
+{
+    // 清除颜色缓冲区
+    CHECK_GL_ERROR(glClear(GL_COLOR_BUFFER_BIT));
+    // 绑定着色器程序
+    CHECK_GL_ERROR(glUseProgram(shaderProgram));
+    // 绑定VAO
+    CHECK_GL_ERROR(glBindVertexArray(VAO));
+    // 绘制三角形
+    CHECK_GL_ERROR(glDrawArrays(GL_TRIANGLES, 0, 3));
+}
+
 bool CreateWindow()
 {
     // 初始化窗口
@@ -140,16 +239,18 @@ bool CreateWindow()
     APP->SetMouseButtonCallback(OnMouseButtonEvent);
     APP->SetMouseMoveCallback(OnMouseMoveEvent);
     APP->SetMouseScrollCallback(OnMouseScrollEvent);
+    // 准备着色器程序
+    PrepareShader();
     // 准备VBO数据
-    Prepare();
+    PrepareMeshData();
     // 设置视口大小及清除颜色
     CHECK_GL_ERROR(glViewport(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT));
     CHECK_GL_ERROR(glClearColor(0.1f, 0.1f, 0.2f, 1.0f));
     // 执行渲染循环
     while (APP->WindowUpdate())
     {
-        // 清除颜色缓冲区
-        CHECK_GL_ERROR(glClear(GL_COLOR_BUFFER_BIT));
+        // 渲染
+        Render();
     }
     // 销毁窗口
     APP->WindowDestroy();
