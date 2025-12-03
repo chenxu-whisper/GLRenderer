@@ -46,8 +46,8 @@
     * 正交投影（Orthographic Projection）
     * 视图矩阵（View Matrix）
   
-* **[intermediate](https://github.com/ByteDance/GLRenderer/tree/intermediate)：中级分支，包括OpenGL中级知识：
+* **[intermediate](https://github.com/ByteDance/GLRenderer/tree/intermediate)**：中级分支，包括OpenGL中级知识：
 
-* **[advanced](https://github.com/ByteDance/GLRenderer/tree/advanced)：高级分支，包括OpenGL高级知识：
+* **[advanced](https://github.com/ByteDance/GLRenderer/tree/advanced)**：高级分支，包括OpenGL高级知识：
 
 ---
