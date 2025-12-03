@@ -19,11 +19,30 @@
  * stride：每个顶点的步长，即从一个顶点的位置数据开始，到下一个顶点的位置数据的字节偏移量。每个顶点占用6个float， stride = 6 * sizeof(float) = 24
  * offset：每个顶点的颜色数据在顶点数组中的字节偏移量。颜色数据紧跟在位置数据后面，offset = 0（位置） + 3 * sizeof(float)（颜色） = 12
 */
-const float verties[] =
+const float vertices[] =
 {
     -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // 左下
      0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // 右下
      0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f  // 顶部
+};
+
+/* 矩形数据 （位置 + 颜色）
+ * 每个顶点由位置（3个float）和颜色（3个float）组成
+ * stride：每个顶点的步长，即从一个顶点的位置数据开始，到下一个顶点的位置数据的字节偏移量。每个顶点占用6个float， stride = 6 * sizeof(float) = 24
+ * offset：每个顶点的颜色数据在顶点数组中的字节偏移量。颜色数据紧跟在位置数据后面，offset = 0（位置） + 3 * sizeof(float)（颜色） = 12
+*/
+const float rect[] =
+{
+    -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // 左下
+     0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // 右下
+     0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, // 顶部
+    -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f  // 左上
+};
+
+const unsigned int indices[] =
+{
+    0, 1, 2, // 第一个三角形
+    2, 3, 0 // 第二个三角形
 };
 
 // 顶点着色器
@@ -118,42 +137,180 @@ void OnMouseScrollEvent(double xoffset, double yoffset)
 }
 
 
-GLuint VAO = 0;
+GLuint triangleVAO = 0;
+GLuint rectangleVAO = 0;
+
 GLuint shaderProgram = 0;
 // 准备VAO, VBO
-void PrepareMeshData()
+void PrepareTriangleData()
 {
     // 生成VBO
     GLuint VBO = 0;
+    /* 生成VBO缓冲区对象
+     * @param n: 要生成的缓冲区对象数量，这里是1
+     * @param buffers: 指向GLuint数组的指针，用于存储生成的缓冲区对象ID
+     */
     CHECK_GL_ERROR(glGenBuffers(1, &VBO));
     /* 绑定VBO到当前OpenGL状态机的当前VBO插槽
-     * GL_ARRAY_BUFFER: 表示当前VBO这个插槽
+     * @param target: 目标缓冲区类型，这里是GL_ARRAY_BUFFER，即顶点缓冲区
+     * @param buffer: 要绑定的缓冲区对象的ID，这里是VBO
      */
     CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, VBO));
     /* 开辟显存空间，向VBO传输数据
-     * GL_STATIC_DRAW：表示数据将被使用多次，且不会被修改
-     * GL_DYNAMIC_DRAW：数据会被改变很多。
-     * GL_STREAM_DRAW ：数据每次绘制时都会改变。
+     * @param target: 目标缓冲区类型，这里是GL_ARRAY_BUFFER，即顶点缓冲区
+     * @param size: 要传输的数据大小，这里是sizeof(vertices)，即顶点数组的大小
+     * @param data: 指向要传输数据的指针，这里是vertices
+     * @param usage: 数据的使用模式
+         * GL_STATIC_DRAW：表示数据将被使用多次，且不会被修改
+         * GL_DYNAMIC_DRAW：数据会被改变很多。
+         * GL_STREAM_DRAW ：数据每次绘制时都会改变。
      */
-    CHECK_GL_ERROR(glBufferData(GL_ARRAY_BUFFER, sizeof(verties), verties, GL_STATIC_DRAW));
+    CHECK_GL_ERROR(glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
 
     // 生成VAO
     // GLuint VAO = 0;
-    CHECK_GL_ERROR(glGenVertexArrays(1, &VAO));
-    // 绑定VBO到当前OpenGL状态机的当前VAO插槽
-    CHECK_GL_ERROR(glBindVertexArray(VAO));
-    // 启用顶点属性数组，索引为0：position, 在vertex shader中layout(location = 0)指定
+    /* 生成VAO缓冲区对象
+     * @param n: 要生成的缓冲区对象数量，这里是1
+     * @param arrays: 指向GLuint数组的指针，用于存储生成的缓冲区对象ID
+     */
+    CHECK_GL_ERROR(glGenVertexArrays(1, &triangleVAO));
+    /* 绑定VAO到当前OpenGL状态机的当前VAO插槽
+     * @param array: 要绑定的缓冲区对象的ID，这里是VAO
+     */
+    CHECK_GL_ERROR(glBindVertexArray(triangleVAO));
+    /* 启用顶点属性数组，索引为0：position, 在vertex shader中layout(location = 0)指定
+     * @param index: 顶点属性索引，对应vertex shader中的layout(location = index)
+     */
     CHECK_GL_ERROR(glEnableVertexAttribArray(0));
-    // 设置顶点属性指针，索引为0，属性为3个float，步长为24个字节，偏移量为0个字节
+    /* 设置顶点属性指针，索引为0，属性为3个float，步长为24个字节，偏移量为0个字节
+     * @param index: 顶点属性索引，对应vertex shader中的layout(location = index)
+     * @param size: 每个顶点属性的组件数量，这里是3个float，即vec3
+     * @param type: 数据类型，这里是GL_FLOAT，每个组件占用4个字节
+     * @param normalized: 是否归一化，这里是GL_FALSE
+     * @param stride: 每个顶点的步长，即从一个顶点的位置数据开始，到下一个顶点的位置数据的字节偏移量。每个顶点占用6个float， stride = 6 * sizeof(float) = 24
+     * @param offset: 每个顶点的位置数据在顶点数组中的字节偏移量。位置数据在顶点数组的开头，offset = 0
+     */
     CHECK_GL_ERROR(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, reinterpret_cast<void *>(0)));
     // 启用顶点属性数组，索引为1：color, 在vertex shader中layout(location = 1)指定
     CHECK_GL_ERROR(glEnableVertexAttribArray(1));
-    // 设置顶点属性指针，索引为1，属性为3个float，步长为24个字节，偏移量为12个字节
+    /* 设置顶点属性指针，索引为1，属性为3个float，步长为24个字节，偏移量为12个字节
+     * @param index: 顶点属性索引，对应vertex shader中的layout(location = index)
+     * @param size: 每个顶点属性的组件数量，这里是3个float，即vec3
+     * @param type: 数据类型，这里是GL_FLOAT，每个组件占用4个字节
+     * @param normalized: 是否归一化，这里是GL_FALSE
+     * @param stride: 每个顶点的步长，即从一个顶点的颜色数据开始，到下一个顶点的颜色数据的字节偏移量。每个顶点占用6个float， stride = 6 * sizeof(float) = 24
+     * @param offset: 每个顶点的颜色数据在顶点数组中的字节偏移量。颜色数据在顶点数组的第3个float开始，offset = sizeof(float) * 3
+     */
     CHECK_GL_ERROR(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, reinterpret_cast<void *>(sizeof(float) * 3)));
 
-    // 解绑VAO, VBO
+    // 解绑VAO, VBO, EBO
+    /* 解绑VAO到当前OpenGL状态机的当前VAO插槽
+     * @param array: 要解绑的缓冲区对象的ID，这里是VAO
+     */
+    CHECK_GL_ERROR(glBindVertexArray(0));
+    /* 解绑VBO到当前OpenGL状态机的当前ARRAY_BUFFER插槽
+     * @param buffer: 要解绑的缓冲区对象的ID，这里是VBO
+     */
+    CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, 0));
+}
+
+void PrepareRectangleData()
+{
+    // 生成VBO
+    GLuint VBO = 0;
+    /* 生成VBO缓冲区对象
+     * @param n: 要生成的缓冲区对象数量，这里是1
+     * @param buffers: 指向GLuint数组的指针，用于存储生成的缓冲区对象ID
+     */
+    CHECK_GL_ERROR(glGenBuffers(1, &VBO));
+    /* 绑定VBO到当前OpenGL状态机的当前VBO插槽
+     * @param target: 目标缓冲区类型，这里是GL_ARRAY_BUFFER，即顶点缓冲区
+     * @param buffer: 要绑定的缓冲区对象的ID，这里是VBO
+     */
+    CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, VBO));
+    /* 开辟显存空间，向VBO传输数据
+     * @param target: 目标缓冲区类型，这里是GL_ARRAY_BUFFER，即顶点缓冲区
+     * @param size: 要传输的数据大小，这里是sizeof(vertices)，即顶点数组的大小
+     * @param data: 指向要传输数据的指针，这里是vertices
+     * @param usage: 数据的使用模式
+         * GL_STATIC_DRAW：表示数据将被使用多次，且不会被修改
+         * GL_DYNAMIC_DRAW：数据会被改变很多。
+         * GL_STREAM_DRAW ：数据每次绘制时都会改变。
+     */
+    CHECK_GL_ERROR(glBufferData(GL_ARRAY_BUFFER, sizeof(rect), rect, GL_STATIC_DRAW));
+
+    // 生成EBO
+    GLuint EBO = 0;
+    /* 生成EBO缓冲区对象
+     * @param n: 要生成的缓冲区对象数量，这里是1
+     * @param buffers: 指向GLuint数组的指针，用于存储生成的缓冲区对象ID
+     */
+    CHECK_GL_ERROR(glGenBuffers(1, &EBO));
+    /* 绑定EBO到当前OpenGL状态机的当前EBO插槽，此时VAO尚未创建或绑定, 因此EBO需要在VAO绑定状态下绑定, 因为VAO还未绑定，所以这个EBO绑定状态只是临时用于数据传输
+     * @param target: 目标缓冲区类型，这里是GL_ELEMENT_ARRAY_BUFFER，即索引缓冲区
+     * @param buffer: 要绑定的缓冲区对象的ID，这里是EBO
+     */
+    CHECK_GL_ERROR(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO));
+    /* 开辟显存空间，向EBO传输数据
+     * @param target: 目标缓冲区类型，这里是GL_ELEMENT_ARRAY_BUFFER，即索引缓冲区
+     * @param size: 要传输的数据大小，这里是sizeof(indices)，即索引数组的大小
+     * @param data: 指向要传输数据的指针，这里是indices
+     * @param usage: 数据的使用模式
+         * GL_STATIC_DRAW：表示数据将被使用多次，且不会被修改
+         * GL_DYNAMIC_DRAW：数据会被改变很多。
+         * GL_STREAM_DRAW ：数据每次绘制时都会改变。
+     */
+    CHECK_GL_ERROR(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW));
+
+    // 生成VAO, 先绑定VAO
+    /* 生成VAO缓冲区对象
+     * @param n: 要生成的缓冲区对象数量，这里是1
+     * @param arrays: 指向GLuint数组的指针，用于存储生成的缓冲区对象ID
+     */
+    CHECK_GL_ERROR(glGenVertexArrays(1, &rectangleVAO));
+    /* 绑定VAO到当前OpenGL状态机的当前VAO插槽
+     * @param array: 要绑定的缓冲区对象的ID，这里是rectangleVAO
+     */
+    CHECK_GL_ERROR(glBindVertexArray(rectangleVAO));
+
+    // 确保VBO在VAO绑定后再次绑定
+    CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, VBO));
+
+
+    /* 启用顶点属性数组，索引为0：position, 在vertex shader中layout(location = 0)指定
+     * @param index: 顶点属性索引，对应vertex shader中的layout(location = index)
+     */
+    CHECK_GL_ERROR(glEnableVertexAttribArray(0));
+    /* 设置顶点属性指针，索引为0，属性为3个float，步长为24个字节，偏移量为0个字节
+     * @param index: 顶点属性索引，对应vertex shader中的layout(location = index)
+     * @param size: 每个顶点属性的组件数量，这里是3个float，即vec3
+     * @param type: 数据类型，这里是GL_FLOAT，每个组件占用4个字节
+     * @param normalized: 是否归一化，这里是GL_FALSE
+     * @param stride: 每个顶点的步长，即从一个顶点的位置数据开始，到下一个顶点的位置数据的字节偏移量。每个顶点占用6个float， stride = 6 * sizeof(float) = 24
+     * @param offset: 每个顶点的位置数据在顶点数组中的字节偏移量。位置数据在顶点数组的开头，offset = 0
+     */
+    CHECK_GL_ERROR(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, reinterpret_cast<void *>(0)));
+    /* 启用顶点属性数组，索引为1：color, 在vertex shader中layout(location = 1)指定
+     * @param index: 顶点属性索引，对应vertex shader中的layout(location = index)
+     */
+    CHECK_GL_ERROR(glEnableVertexAttribArray(1));
+    /* 设置顶点属性指针，索引为1，属性为3个float，步长为24个字节，偏移量为12个字节
+     * @param index: 顶点属性索引，对应vertex shader中的layout(location = index)
+     * @param size: 每个顶点属性的组件数量，这里是3个float，即vec3
+     * @param type: 数据类型，这里是GL_FLOAT，每个组件占用4个字节
+     * @param normalized: 是否归一化，这里是GL_FALSE
+     * @param stride: 每个顶点的步长，即从一个顶点的位置数据开始，到下一个顶点的位置数据的字节偏移量。每个顶点占用6个float， stride = 6 * sizeof(float) = 24
+     * @param offset: 每个顶点的颜色数据在顶点数组中的字节偏移量。颜色数据在顶点数组的第3个float开始，offset = sizeof(float) * 3 = 12
+     */
+    CHECK_GL_ERROR(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, reinterpret_cast<void *>(sizeof(float) * 3)));
+
+    // 然后绑定EBO, 只有在VAO绑定状态下的EBO绑定才会被VAO永久记录, 才能确保索引数据与顶点配置正确关联，实现正确的图元绘制。
+    CHECK_GL_ERROR(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO));
+
+    // 解绑VAO和VBO，但不要解绑EBO（它应该保持与VAO的关联）
     CHECK_GL_ERROR(glBindVertexArray(0));
     CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    // 注意：不要在这里解绑EBO，解绑这会导致VAO记录一个无效的EBO绑定（0）, 后续绘制时会使用默认的EBO（0）, 导致绘制错误
 }
 
 void PrepareShader()
@@ -214,14 +371,49 @@ void PrepareShader()
 
 void Render()
 {
-    // 清除颜色缓冲区
+    /* 清除颜色缓冲区，将颜色缓冲区的颜色设置为指定的颜色值
+     * @param mask: 要清除的缓冲区位掩码，这里是GL_COLOR_BUFFER_BIT，即颜色缓冲区
+     */
     CHECK_GL_ERROR(glClear(GL_COLOR_BUFFER_BIT));
-    // 绑定着色器程序
+
+    /* 绑定着色器程序，将指定的着色器程序绑定到当前OpenGL状态机，后续的绘制操作将使用该程序的着色器代码
+     * @param program: 要绑定的着色器程序ID，这里是shaderProgram
+     */
     CHECK_GL_ERROR(glUseProgram(shaderProgram));
-    // 绑定VAO
-    CHECK_GL_ERROR(glBindVertexArray(VAO));
+
     // 绘制三角形
-    CHECK_GL_ERROR(glDrawArrays(GL_TRIANGLES, 0, 3));
+    /* 绑定VAO，将指定的VAO绑定到当前OpenGL状态机，后续的顶点属性配置和索引绘制操作将使用该VAO的状态
+     * @param vao: 要绑定的VAO ID，这里是triangleVAO
+     */
+    CHECK_GL_ERROR(glBindVertexArray(triangleVAO));
+    /* 绘制三角形，使用顶点缓冲区绘制三角形图元
+     * @Param mode： 要绘制的图元类型
+         * GL_POINTS：每个顶点单独画一个点
+         * GL_LINES：绘制线段图元, 每2个顶点画一个线段（顶点数需为 2 的倍数）
+         * GL_LINE_STRIP：绘制折线图元, 每2个顶点画一条线段（顶点数需为 2 的倍数）
+         * GL_TRIANGLES：绘制三角形图元, 每3个顶点画一个三角形（顶点数需为 3 的倍数）
+         * GL_LINE_STRIP：：三角带（相邻 3 个顶点组成三角形，如顶点 0-1-2、1-2-3… 节省顶点）
+         * GL_TRIANGLE_FAN：三角扇（以第一个顶点为中心，如 0-1-2、0-2-3… 适合画圆形/扇形）
+     * @Param first： 要绘制的第一个顶点索引
+     * @Param count： 要绘制的顶点数量
+     */
+    // CHECK_GL_ERROR(glDrawArrays(GL_TRIANGLES, 0, 3));
+
+    // 绘制矩形
+    /* 绑定VAO，将指定的VAO绑定到当前OpenGL状态机，后续的顶点属性配置和索引绘制操作将使用该VAO的状态
+     * @param vao: 要绑定的VAO ID，这里是rectangleVAO
+     */
+    CHECK_GL_ERROR(glBindVertexArray(rectangleVAO));
+    /* 绘制矩形，使用索引缓冲区绘制矩形图元
+     * @Param mode： 要绘制的图元类型，这里是GL_TRIANGLES，即三角形图元
+     * @Param count： 要绘制的索引数量，这里是6，即绘制6个索引对应的三角形
+     * @Param type： 索引数据的类型，这里是GL_UNSIGNED_INT，即无符号整数类型
+     * @Param indices： 指向索引数据的指针，这里是nullptr，因为索引数据已经绑定到EBO
+        * 如果使用EBO，参数为nullptr(0)
+        * 如果使用EBO，参数为数字，表示EBO的偏移量（单位为字节）
+        * 如果没有使用EBO（VAO没有绑定EBO），可以直接将CPU端的索引数据指针（indices）作为参数传递*
+     */
+    CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
 }
 
 bool CreateWindow()
@@ -241,8 +433,10 @@ bool CreateWindow()
     APP->SetMouseScrollCallback(OnMouseScrollEvent);
     // 准备着色器程序
     PrepareShader();
-    // 准备VBO数据
-    PrepareMeshData();
+    // 准备三角形数据
+    // PrepareTriangleData();
+    // 准备四边形数据
+    PrepareRectangleData();
     // 设置视口大小及清除颜色
     CHECK_GL_ERROR(glViewport(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT));
     CHECK_GL_ERROR(glClearColor(0.1f, 0.1f, 0.2f, 1.0f));
