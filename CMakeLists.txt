@@ -7,4 +7,4 @@ set(CMAKE_CXX_STANDARD 20)
 # 全局预编译宏
 add_definitions(-DDEBUG)
 # 添加src子目录
-add_subdirectory(src)
+add_subdirectory(Src)

@@ -80,10 +80,10 @@
     2. **解绑VAO时的行为**：解绑VAO只会断开当前上下文与该VAO的连接，但EBO与VAO之间的关联关系已经被记录在VAO内部，解绑VAO不会自动解绑EBO。
     3. **不应该解绑EBO**：解解绑这会导致VAO记录一个无效的EBO绑定（0）, 后续绘制时会使用默认的EBO（0）, 导致绘制错误。
 
-<img src="screenshot/vertex_array_objects_ebo.png" alt="vertex_array_objects_ebo" width="400" height="300">
+<img src="Screenshot/vertex_array_objects_ebo.png" alt="vertex_array_objects_ebo" width="400" height="300">
 <div style="display: flex; justify-content: flex-start; align-items: center; gap: 10px;">
-  <img src="screenshot/流程与绑定时序图.png" alt="描述2" style="width: 360px; height: 1080px;" />
-  <img src="screenshot/组件层级关联结构图.png" alt="描述3" style="width: 1640px; height: 1080px;" />
+  <img src="Screenshot/流程与绑定时序图.png" alt="描述2" style="width: 360px; height: 1080px;" />
+  <img src="Screenshot/组件层级关联结构图.png" alt="描述3" style="width: 1640px; height: 1080px;" />
 </div>
 
 ### NDC（Normalized Device Coordinates，归一化设备坐标）

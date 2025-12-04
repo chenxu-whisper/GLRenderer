@@ -9,7 +9,7 @@
   * $D(t) = D_0 + t(D_1 - D_0)$
   * 其中，$D(t)$ 是插值点，$D_0$ 和 $D_1$ 是已知的两个点，$t$ 是参数，取值范围为 $[0, 1]$。
   
-  <img src="screenshot/线性插值.png" alt="线性插值" width="600px" height="auto">
+  <img src="Screenshot/线性插值.png" alt="线性插值" width="600px" height="auto">
 * **应用**：
   * 颜色插值
   * 纹理坐标插值
@@ -23,4 +23,4 @@
   * $\gamma = \frac{S_{APB}}{S_{ABC}}$
   * $\text{Color}_P = \alpha \cdot \text{Color}_A + \beta \cdot \text{Color}_B + \gamma \cdot \text{Color}_C$
 
-  <img src="screenshot/彩色三角形插值算法.jpg" alt="彩色三角形插值算法" width="600px" height="auto">
+  <img src="Screenshot/彩色三角形插值算法.jpg" alt="彩色三角形插值算法" width="600px" height="auto">

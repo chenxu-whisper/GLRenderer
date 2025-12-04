@@ -1,8 +1,6 @@
-#include <iostream>
-#include <glad/glad.h> // note：glad头文件放在GLFW头文件之前，避免重复包含
-#include <GLFW/glfw3.h>
-#include "wrapper/ErrorChecker.h"
-#include "application/Application.h"
+#include "Core.h"
+#include "Wrapper/ErrorChecker.h"
+#include "Application/Application.h"
 
 // 窗体参数
 #define MAJOR_VERSION 4 // OpenGL主版本号
@@ -213,6 +211,7 @@ void PrepareTriangleData()
      */
     CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
+
 
 void PrepareRectangleData()
 {

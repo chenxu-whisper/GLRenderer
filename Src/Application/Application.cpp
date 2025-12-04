@@ -1,6 +1,4 @@
-#include <iostream>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include "Core.h"
 #include "Application.h"
 
 Application::Application() = default;
