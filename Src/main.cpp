@@ -1,6 +1,7 @@
 #include "Core.h"
 #include "Wrapper/ErrorChecker.h"
 #include "Application/Application.h"
+#include "Framework/Shader.h"
 
 // 窗体参数
 #define MAJOR_VERSION 4 // OpenGL主版本号
@@ -42,33 +43,6 @@ const unsigned int indices[] =
     0, 1, 2, // 第一个三角形
     2, 3, 0 // 第二个三角形
 };
-
-// 顶点着色器
-const char* vertexShaderSource = R"(
-    #version 460 core
-    layout(location = 0) in vec3 aPos;
-    layout(location = 1) in vec3 aColor;
-
-    out vec3 ourColor;
-
-    void main()
-    {
-        gl_Position = vec4(aPos, 1.0);
-        ourColor = aColor;
-    }
-)";
-
-// 片段着色器
-const char* fragmentShaderSource = R"(
-    #version 460 core
-    in vec3 ourColor;
-    out vec4 FragColor;
-
-    void main()
-    {
-        FragColor = vec4(ourColor, 1.0);
-    }
-)";
 
 // 事件操作
 void OnWindowResizeEvent(int width, int height)
@@ -134,11 +108,10 @@ void OnMouseScrollEvent(double xoffset, double yoffset)
     std::cout << "Mouse scroll: (" << xoffset << ", " << yoffset << ")" << std::endl;
 }
 
-
 GLuint triangleVAO = 0;
 GLuint rectangleVAO = 0;
+Shader* shader = nullptr;
 
-GLuint shaderProgram = 0;
 // 准备VAO, VBO
 void PrepareTriangleData()
 {
@@ -211,7 +184,6 @@ void PrepareTriangleData()
      */
     CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
-
 
 void PrepareRectangleData()
 {
@@ -312,62 +284,6 @@ void PrepareRectangleData()
     // 注意：不要在这里解绑EBO，解绑这会导致VAO记录一个无效的EBO绑定（0）, 后续绘制时会使用默认的EBO（0）, 导致绘制错误
 }
 
-void PrepareShader()
-{
-    // 编译顶点着色器
-    GLuint vertexShader = 0;
-    // 创建顶点着色器对象，返回编号（句柄）
-    CHECK_GL_ERROR(vertexShader = glCreateShader(GL_VERTEX_SHADER));
-    CHECK_GL_ERROR(glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr));
-    CHECK_GL_ERROR(glCompileShader(vertexShader));
-    // 检查顶点着色器编译是否成功
-    GLint success;
-    GLchar infoLog[512];
-    CHECK_GL_ERROR(glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success));
-    if (!success)
-    {
-        CHECK_GL_ERROR(glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog));
-        std::cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    // 编译片段着色器
-    GLuint fragmentShader = 0;
-    // 编译片段着色器
-    CHECK_GL_ERROR(fragmentShader = glCreateShader(GL_FRAGMENT_SHADER));
-    // 设置片段着色器源码
-    CHECK_GL_ERROR(glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr));
-    // 编译片段着色器
-    CHECK_GL_ERROR(glCompileShader(fragmentShader));
-    // 检查片段着色器编译是否成功
-    CHECK_GL_ERROR(glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success));
-    if (!success)
-    {
-        CHECK_GL_ERROR(glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog));
-        std::cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    // 链接着色器程序
-    // GLuint shaderProgram = 0;
-    // 创建最终可执行程序对象，返回编号（句柄）
-    CHECK_GL_ERROR(shaderProgram = glCreateProgram());
-    // 绑定顶点着色器和片段着色器到着色器程序
-    CHECK_GL_ERROR(glAttachShader(shaderProgram, vertexShader));
-    CHECK_GL_ERROR(glAttachShader(shaderProgram, fragmentShader));
-    // 链接着色器程序
-    CHECK_GL_ERROR(glLinkProgram(shaderProgram));
-    // 检查着色器程序链接是否成功
-    CHECK_GL_ERROR(glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success));
-    if (!success)
-    {
-        CHECK_GL_ERROR(glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog));
-        std::cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-    }
-
-    // 删除着色器
-    CHECK_GL_ERROR(glDeleteShader(vertexShader));
-    CHECK_GL_ERROR(glDeleteShader(fragmentShader));
-}
-
 void Render()
 {
     /* 清除颜色缓冲区，将颜色缓冲区的颜色设置为指定的颜色值
@@ -375,16 +291,16 @@ void Render()
      */
     CHECK_GL_ERROR(glClear(GL_COLOR_BUFFER_BIT));
 
-    /* 绑定着色器程序，将指定的着色器程序绑定到当前OpenGL状态机，后续的绘制操作将使用该程序的着色器代码
-     * @param program: 要绑定的着色器程序ID，这里是shaderProgram
-     */
-    CHECK_GL_ERROR(glUseProgram(shaderProgram));
+    // 加载并编译着色器
+    shader->LoadCompileShader("../Asset/Shader/Vertex.vert", "../Asset/Shader/Fragment.frag");
+    shader->UseShaderProgram();
+    shader->SetFloatUniform("uTime", static_cast<float>(glfwGetTime())); // glfwGetTime()返回当前时间，单位为秒
 
     // 绘制三角形
     /* 绑定VAO，将指定的VAO绑定到当前OpenGL状态机，后续的顶点属性配置和索引绘制操作将使用该VAO的状态
      * @param vao: 要绑定的VAO ID，这里是triangleVAO
      */
-    CHECK_GL_ERROR(glBindVertexArray(triangleVAO));
+    // CHECK_GL_ERROR(glBindVertexArray(triangleVAO));
     /* 绘制三角形，使用顶点缓冲区绘制三角形图元
      * @Param mode： 要绘制的图元类型
          * GL_POINTS：每个顶点单独画一个点
@@ -413,6 +329,8 @@ void Render()
         * 如果没有使用EBO（VAO没有绑定EBO），可以直接将CPU端的索引数据指针（indices）作为参数传递*
      */
     CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+
+    shader->EndShaderProgram();
 }
 
 bool CreateWindow()
@@ -430,12 +348,13 @@ bool CreateWindow()
     APP->SetMouseButtonCallback(OnMouseButtonEvent);
     APP->SetMouseMoveCallback(OnMouseMoveEvent);
     APP->SetMouseScrollCallback(OnMouseScrollEvent);
-    // 准备着色器程序
-    PrepareShader();
-    // 准备三角形数据
-    // PrepareTriangleData();
+
+    // 添加这行代码初始化shader对象
+    shader = new Shader();
+
     // 准备四边形数据
     PrepareRectangleData();
+
     // 设置视口大小及清除颜色
     CHECK_GL_ERROR(glViewport(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT));
     CHECK_GL_ERROR(glClearColor(0.1f, 0.1f, 0.2f, 1.0f));
@@ -448,9 +367,14 @@ bool CreateWindow()
     // 销毁窗口
     APP->WindowDestroy();
 
+    if (shader)
+    {
+        delete shader;
+        shader = nullptr;
+    }
+
     return true;
 }
-
 
 int main()
 {

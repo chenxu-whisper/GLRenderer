@@ -14,8 +14,8 @@
 
 ### 分支
 * **[main](https://github.com/chenxu-whisper/GLRenderer/tree/main)**：主线分支，包含最新的功能和修复。
-* **[feature](https://github.com/chenxu-whisper/GLRenderer/tree/feature)**：开发分支：开发过程中的新功能和修复。
-* **[beginner](https://github.com/chenxu-whisper/GLRenderer/tree/beginner)**：初级分支，包括OpenGL基础知识。
+* **[feature](https://github.com/chenxu-whisper/GLRenderer/tree/feature)**：开发分支：开发过程中的新功能和修复：
+* **[beginner](https://github.com/chenxu-whisper/GLRenderer/tree/beginner)**：初级分支，包括OpenGL基础知识：
   * 基础功能
     * 窗体创建
     * 上下文创建

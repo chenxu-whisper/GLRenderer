@@ -98,13 +98,22 @@
     3. **片段着色器**：在片段着色器中, 输入的屏幕空间坐标会被自动转换为归一化设备坐标。
 
 ### Shader（着色器）
-* **作用**：用于在GPU上执行渲染操作的程序。它可以是顶点着色器（Vertex Shader）、片段着色器（Fragment Shader）或几何着色器（Geometry Shader）等。
+* **作用**：用于在GPU上执行渲染操作的程序。它可以是顶点着色器（Vertex Shader）、片段着色器（Fragment Shader）或几何着色器（Geometry Shader）等，在执行运行的时候数据之间不共享（每个着色器程序都是独立的）并行运行，但指令一致（渲染状态）。
 * **工作流程**：
     1. **编写着色器代码**：使用GLSL（OpenGL Shading Language）编写着色器代码, 实现所需的渲染效果。
-    2. **创建着色器对象**：调用`glCreateShader`顶点、片元着色器对象。
-    3. **着色器代码附加到着色器对象上**： 调用`glShaderSource`把顶点、片元着色器源码附加到着色器对象上。
-    4. **编译着色器**：调用`glCompileShader`编译着色器代码, 生成可执行的着色器对象。
+  2. **创建着色器对象**：调用`glCreateShader`顶点、片元着色器对象。
+  3. **着色器代码附加到着色器对象上**： 调用`glShaderSource`把顶点、片元着色器源码附加到着色器对象上。
+  4. **编译着色器**：调用`glCompileShader`编译着色器代码, 生成可执行的着色器对象。
     5. **创建着色器程序**：调用`glCreateProgram`创建一个着色器程序对象。
     6. **Attach着色器**：调用`glAttachShader`将编译好的着色器对象Attach到着色器程序中。
     7. **Link着色器程序**：调用`glLinkProgram`将Attach的着色器对象链接到着色器程序中, 生成可执行的着色器程序。
     8. **使用着色器程序**：调用`glUseProgram`使用着色器程序, 后续的渲染操作将使用该程序。
+
+### Uniform（统一变量）
+* **作用**：是一种从CPU中的应用向GPU中的着色器发送数据的方式，被当前shader运行的所有单元（顶点、片元）共享的变量，必须在每个着色器程序对象中都是独一无二的，可以被着色器程序的任意着色器在任意阶段访问。
+* **工作流程**：
+    1. **在着色器代码中声明Uniform变量**：在顶点着色器和片段着色器的GLSL代码中, 使用`uniform`关键字声明Uniform变量, 如`uniform vec4 uColor;`。
+    2. **在C++代码中设置Uniform变量的值**：在C++代码中, 使用`glUniform*`系列函数设置Uniform变量的值, 如`glUniform4f(uniformLocation, 1.0f, 0.0f, 0.0f, 1.0f);`。
+    3. **在渲染循环中更新Uniform变量的值**：在渲染循环中, 根据需要更新Uniform变量的值, 如根据用户输入或动画效果改变颜色。一定要先调用`glUseProgram`使用着色器程序, 才能设置Uniform变量的值。
+    
+    <img src="Screenshot/uniform.jpg" alt="uniform" width="600px" height="auto">
