@@ -24,6 +24,11 @@ public:
      * @param value: 要设置的浮点数值
      */
     void SetFloatUniform(const std::string& name, float value) const;
+    /* 设置整数类型的uniform变量值
+     * @param name: uniform变量的名称，用于在着色器中定位该变量
+     * @param value: 要设置的整数数值(要激活的纹理单元，如GL_TEXTURE0、GL_TEXTURE1...GL_TEXTURE15等)
+     */
+    void SetIntUniform(const std::string& name, int value) const;
     // 暂时没有glm库
     // void SetVec3Uniform(const std::string& name, const glm::vec3& value) const;
 

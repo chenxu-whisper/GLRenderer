@@ -1,5 +1,7 @@
+
 #include "Core.h"
-#include "Wrapper/ErrorChecker.h"
+#include "Texture.h"
+#include "../Include/Wrapper/ErrorChecker.h"
 #include "Application/Application.h"
 #include "Framework/Shader.h"
 
@@ -13,30 +15,39 @@
 #define VIEWPORT_HEIGHT 600 // 视口高度
 
 
-/* 顶点数据 （位置 + 颜色）
+/*顶点数据 （位置 + 颜色）
  * 每个顶点由位置（3个float）和颜色（3个float）组成
  * stride：每个顶点的步长，即从一个顶点的位置数据开始，到下一个顶点的位置数据的字节偏移量。每个顶点占用6个float， stride = 6 * sizeof(float) = 24
  * offset：每个顶点的颜色数据在顶点数组中的字节偏移量。颜色数据紧跟在位置数据后面，offset = 0（位置） + 3 * sizeof(float)（颜色） = 12
 */
-const float vertices[] =
+constexpr float vertices[] =
 {
     -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // 左下
      0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // 右下
      0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f  // 顶部
 };
 
-/* 矩形数据 （位置 + 颜色）
- * 每个顶点由位置（3个float）和颜色（3个float）组成
- * stride：每个顶点的步长，即从一个顶点的位置数据开始，到下一个顶点的位置数据的字节偏移量。每个顶点占用6个float， stride = 6 * sizeof(float) = 24
- * offset：每个顶点的颜色数据在顶点数组中的字节偏移量。颜色数据紧跟在位置数据后面，offset = 0（位置） + 3 * sizeof(float)（颜色） = 12
+/**
+ * 矩形数据 （位置 + 颜色 + 纹理坐标）
+ * 每个顶点由位置（3个float）、颜色（3个float）和纹理坐标（2个float）组成
 */
-const float rect[] =
+constexpr float rect[] =
 {
-    -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // 左下
-     0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // 右下
-     0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, // 顶部
-    -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f  // 左上
+    -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 左下
+     0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // 右下
+     0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // 顶部
+    -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // 左上
 };
+
+// uv范围 0.0-2.0。可修改纹理包裹模式
+// constexpr float rect[] =
+// {
+//     // 位置（3个float）   //颜色（3个float）  // 纹理坐标（2个float）
+//     -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 左下
+//      0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 2.0f, 0.0f, // 右下
+//      0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 2.0f, 2.0f, // 顶部
+//     -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 2.0f  // 左上
+// };
 
 const unsigned int indices[] =
 {
@@ -111,6 +122,7 @@ void OnMouseScrollEvent(double xoffset, double yoffset)
 GLuint triangleVAO = 0;
 GLuint rectangleVAO = 0;
 Shader* shader = nullptr;
+Texture* texture = nullptr;
 
 // 准备VAO, VBO
 void PrepareTriangleData()
@@ -247,7 +259,6 @@ void PrepareRectangleData()
     // 确保VBO在VAO绑定后再次绑定
     CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, VBO));
 
-
     /* 启用顶点属性数组，索引为0：position, 在vertex shader中layout(location = 0)指定
      * @param index: 顶点属性索引，对应vertex shader中的layout(location = index)
      */
@@ -257,10 +268,10 @@ void PrepareRectangleData()
      * @param size: 每个顶点属性的组件数量，这里是3个float，即vec3
      * @param type: 数据类型，这里是GL_FLOAT，每个组件占用4个字节
      * @param normalized: 是否归一化，这里是GL_FALSE
-     * @param stride: 每个顶点的步长，即从一个顶点的位置数据开始，到下一个顶点的位置数据的字节偏移量。每个顶点占用6个float， stride = 6 * sizeof(float) = 24
+     * @param stride: 每个顶点的步长，即从一个顶点的位置数据开始，到下一个顶点的位置数据的字节偏移量。每个顶点占用8个float， stride = 8 * sizeof(float) = 32
      * @param offset: 每个顶点的位置数据在顶点数组中的字节偏移量。位置数据在顶点数组的开头，offset = 0
      */
-    CHECK_GL_ERROR(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, reinterpret_cast<void *>(0)));
+    CHECK_GL_ERROR(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, reinterpret_cast<void *>(0)));
     /* 启用顶点属性数组，索引为1：color, 在vertex shader中layout(location = 1)指定
      * @param index: 顶点属性索引，对应vertex shader中的layout(location = index)
      */
@@ -270,10 +281,12 @@ void PrepareRectangleData()
      * @param size: 每个顶点属性的组件数量，这里是3个float，即vec3
      * @param type: 数据类型，这里是GL_FLOAT，每个组件占用4个字节
      * @param normalized: 是否归一化，这里是GL_FALSE
-     * @param stride: 每个顶点的步长，即从一个顶点的位置数据开始，到下一个顶点的位置数据的字节偏移量。每个顶点占用6个float， stride = 6 * sizeof(float) = 24
+     * @param stride: 每个顶点的步长，即从一个顶点的位置数据开始，到下一个顶点的位置数据的字节偏移量。每个顶点占用8个float， stride = 8 * sizeof(float) = 32
      * @param offset: 每个顶点的颜色数据在顶点数组中的字节偏移量。颜色数据在顶点数组的第3个float开始，offset = sizeof(float) * 3 = 12
      */
-    CHECK_GL_ERROR(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, reinterpret_cast<void *>(sizeof(float) * 3)));
+    CHECK_GL_ERROR(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, reinterpret_cast<void *>(sizeof(float) * 3)));
+    CHECK_GL_ERROR(glEnableVertexAttribArray(2));
+    CHECK_GL_ERROR(glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8, reinterpret_cast<void *>(sizeof(float) * 6)));
 
     // 然后绑定EBO, 只有在VAO绑定状态下的EBO绑定才会被VAO永久记录, 才能确保索引数据与顶点配置正确关联，实现正确的图元绘制。
     CHECK_GL_ERROR(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO));
@@ -291,10 +304,10 @@ void Render()
      */
     CHECK_GL_ERROR(glClear(GL_COLOR_BUFFER_BIT));
 
-    // 加载并编译着色器
-    shader->LoadCompileShader("../Asset/Shader/Vertex.vert", "../Asset/Shader/Fragment.frag");
+    // shader
     shader->UseShaderProgram();
     shader->SetFloatUniform("uTime", static_cast<float>(glfwGetTime())); // glfwGetTime()返回当前时间，单位为秒
+    shader->SetIntUniform("uColorTexture", 0);
 
     // 绘制三角形
     /* 绑定VAO，将指定的VAO绑定到当前OpenGL状态机，后续的顶点属性配置和索引绘制操作将使用该VAO的状态
@@ -349,8 +362,12 @@ bool CreateWindow()
     APP->SetMouseMoveCallback(OnMouseMoveEvent);
     APP->SetMouseScrollCallback(OnMouseScrollEvent);
 
-    // 添加这行代码初始化shader对象
+    // 始化shader对象
     shader = new Shader();
+    shader->LoadCompileShader(ASSET_DIR "Shader/Vertex.vert", ASSET_DIR "Shader/Fragment.frag");
+    // 初始化纹理对象
+    texture = new Texture();
+    texture->LoadTexture(ASSET_DIR "Texture/Bird.png", 0);
 
     // 准备四边形数据
     PrepareRectangleData();
@@ -371,6 +388,12 @@ bool CreateWindow()
     {
         delete shader;
         shader = nullptr;
+    }
+
+    if (texture)
+    {
+        delete texture;
+        texture = nullptr;
     }
 
     return true;

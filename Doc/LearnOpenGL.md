@@ -1,7 +1,8 @@
 # Learn OpenGL
 
 > **参考链接**
-> * https://learnopengl-cn.readthedocs.io/zh/latest/
+> * [OpenGL 中文文档](https://c-cn.readthedocs.io/zh/latest/)
+> * [OpenGL (ES) 调试总结](https://robot9.me/opengl-es-debug/)
 > * https://ai.feishu.cn/docx/W6Eod11C2onvCdxa347crqWunPh
 
 ---
@@ -57,7 +58,7 @@
     4. **配置顶点属性指针**：调用`glVertexAttribPointer(index, size, type, normalized, stride, offset)`配置顶点属性指针, 告诉OpenGL如何从VBO中读取数据。
     5. **启用顶点属性数组**：调用`glEnableVertexAttribArray(index)`启用顶点属性数组, 使OpenGL知道从VBO中读取数据。
 
-### VAO（Vertex Array Object，顶点数组对象）
+#### VAO（Vertex Array Object，顶点数组对象）
 * **作用**：用于存储顶点属性配置的缓冲对象。它将顶点属性（如坐标、颜色、纹理坐标、法线等）的配置信息存储在GPU显存中, 避免每次绘制时重复配置顶点属性指针。在C++中表现为一个unsigned int类型，为GPU端内存对象的一个ID编号。
 * **工作流程**：
     1. **创建VAO**：调用`glGenVertexArrays`生成一个VAO ID（这时还没有分配显存空间, 只是在CPU端创建了一个ID）。
@@ -68,7 +69,7 @@
     * 如`layout(location = 0)`指定了顶点坐标的索引为0, 则在`glVertexAttribPointer(0, ...)`中也需要指定索引为0。
     * 如`layout(location = 1)`指定了颜色的索引为1, 则在`glVertexAttribPointer(1, ...)`中也需要指定索引为1。
 
-### EBO（Element Buffer Object，索引缓冲对象）
+#### EBO（Element Buffer Object，索引缓冲对象）
 * **作用**：用于存储索引数据的缓冲对象。复用顶点数据，解决`glDrawArrays`中“重复存储相同顶点”的冗余问题，大幅节省GPU显存和数据传输带宽。在C++中表现为一个unsigned int类型，为GPU端内存对象的一个ID编号。
 * **工作流程**：
     1. **创建EBO**：调用`glGenBuffers`生成一个EBO ID（这时还没有分配显存空间, 只是在CPU端创建了一个ID）。
@@ -80,13 +81,13 @@
     2. **解绑VAO时的行为**：解绑VAO只会断开当前上下文与该VAO的连接，但EBO与VAO之间的关联关系已经被记录在VAO内部，解绑VAO不会自动解绑EBO。
     3. **不应该解绑EBO**：解解绑这会导致VAO记录一个无效的EBO绑定（0）, 后续绘制时会使用默认的EBO（0）, 导致绘制错误。
 
-<img src="Screenshot/vertex_array_objects_ebo.png" alt="vertex_array_objects_ebo" width="400" height="300">
-<div style="display: flex; justify-content: flex-start; align-items: center; gap: 10px;">
-  <img src="Screenshot/流程与绑定时序图.png" alt="描述2" style="width: 360px; height: 1080px;" />
-  <img src="Screenshot/组件层级关联结构图.png" alt="描述3" style="width: 1640px; height: 1080px;" />
-</div>
+  <img src="Screenshot/vertex_array_objects_ebo.png" alt="vertex_array_objects_ebo" width="400" height="300">
+  <div style="display: flex; justify-content: flex-start; align-items: center; gap: 10px;">
+    <img src="Screenshot/流程与绑定时序图.png" alt="描述2" style="width: 360px; height: 1080px;" />
+    <img src="Screenshot/组件层级关联结构图.png" alt="描述3" style="width: 1640px; height: 1080px;" />
+  </div>
 
-### NDC（Normalized Device Coordinates，归一化设备坐标）
+#### NDC（Normalized Device Coordinates，归一化设备坐标）
 * **作用**：是OpenGL渲染管线中的一个坐标系统, 用于将顶点坐标从裁剪空间映射到屏幕空间。
 * **范围**：NDC坐标的范围是[-1, 1]，超出此范围的顶点将被裁剪掉。Y轴正方向为向上，(0, 0)坐标是这个图像的中心。
 * **计算**：NDC坐标的计算过程如下：
@@ -97,19 +98,21 @@
     2. **光栅化**：在光栅化阶段, NDC坐标会被映射到屏幕空间坐标。
     3. **片段着色器**：在片段着色器中, 输入的屏幕空间坐标会被自动转换为归一化设备坐标。
 
-### Shader（着色器）
+#### Shader（着色器）
 * **作用**：用于在GPU上执行渲染操作的程序。它可以是顶点着色器（Vertex Shader）、片段着色器（Fragment Shader）或几何着色器（Geometry Shader）等，在执行运行的时候数据之间不共享（每个着色器程序都是独立的）并行运行，但指令一致（渲染状态）。
 * **工作流程**：
     1. **编写着色器代码**：使用GLSL（OpenGL Shading Language）编写着色器代码, 实现所需的渲染效果。
-  2. **创建着色器对象**：调用`glCreateShader`顶点、片元着色器对象。
-  3. **着色器代码附加到着色器对象上**： 调用`glShaderSource`把顶点、片元着色器源码附加到着色器对象上。
-  4. **编译着色器**：调用`glCompileShader`编译着色器代码, 生成可执行的着色器对象。
+    2. **创建着色器对象**：调用`glCreateShader`顶点、片元着色器对象。
+    3. **着色器代码附加到着色器对象上**： 调用`glShaderSource`把顶点、片元着色器源码附加到着色器对象上。
+    4. **编译着色器**：调用`glCompileShader`编译着色器代码, 生成可执行的着色器对象。
     5. **创建着色器程序**：调用`glCreateProgram`创建一个着色器程序对象。
     6. **Attach着色器**：调用`glAttachShader`将编译好的着色器对象Attach到着色器程序中。
     7. **Link着色器程序**：调用`glLinkProgram`将Attach的着色器对象链接到着色器程序中, 生成可执行的着色器程序。
     8. **使用着色器程序**：调用`glUseProgram`使用着色器程序, 后续的渲染操作将使用该程序。
+  
+    <img src="Screenshot/Shader.png" alt="Shader" width="600px" height="auto">
 
-### Uniform（统一变量）
+#### Uniform（统一变量）
 * **作用**：是一种从CPU中的应用向GPU中的着色器发送数据的方式，被当前shader运行的所有单元（顶点、片元）共享的变量，必须在每个着色器程序对象中都是独一无二的，可以被着色器程序的任意着色器在任意阶段访问。
 * **工作流程**：
     1. **在着色器代码中声明Uniform变量**：在顶点着色器和片段着色器的GLSL代码中, 使用`uniform`关键字声明Uniform变量, 如`uniform vec4 uColor;`。
@@ -117,3 +120,27 @@
     3. **在渲染循环中更新Uniform变量的值**：在渲染循环中, 根据需要更新Uniform变量的值, 如根据用户输入或动画效果改变颜色。一定要先调用`glUseProgram`使用着色器程序, 才能设置Uniform变量的值。
     
     <img src="Screenshot/uniform.jpg" alt="uniform" width="600px" height="auto">
+
+#### 纹理&采样（Texture&Sampler）
+* **纹理对象**：在GPU端,用来以一定格式存放纹理图片描述信息与数据信息的对象。 。
+* **采样器**：在GPU端,用来根据uv坐标以一定算法从纹理内容中获取颜色色的过程为采样,执行采样的对象为采样器。
+* **纹理单元**：用于链接纹理对象与采样器对象, 每个纹理单元都有一个唯一的索引, 用于在着色器中引用不同的纹理。最多可以有16个纹理单元(0-15)。
+* **纹理像素**：是纹理图片中最小的单位（像素）, 每个像素都有一个颜色值, 用于表示该位置的颜色。
+* **工作流程**：
+    1. **在着色器代码中声明采样器变量**：在片段着色器的GLSL代码中, 使用`uniform sampler2D uTexture;`声明一个采样器变量, 用于存储纹理数据。
+    2. **创建纹理对象**：调用`glGenTextures(GLsizei count, GLuint* textures)`创建一个纹理对象。
+    3. **激活纹理单元**：调用`glActiveTexture(GLenum textureUnit)`激活一个纹理单元。
+    4. **绑定纹理对象**：在C++代码中, 使用`glBindTexture(GLenum target, GLenum texture)`绑定一个纹理对象到采样器变量上, 并绑定到OpenGL状态机的当前纹理单元上。
+    5. **开辟显存传输数据**：调用`glTexImage2D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data)`开辟显存传输数据到纹理对象中。
+    6. **在渲染循环中更新采样器变量的值**：在渲染循环中, 根据需要更新采样器变量的值, 如根据用户输入或动画效果改变纹理。一定要先调用`glUseProgram`使用着色器程序, 才能设置采样器变量的值。
+    <img src="Screenshot/TextureSample.jpg" alt="TextureSample" width="1000px" height="auto">
+    <img src="Screenshot/TextureUnit.jpg" alt="TextureUnit" width="1000px" height="auto">
+* **纹理过滤**：是指当采样器采样的uv坐标不是整数时, 如何处理的问题。
+  1. **GL_NEAREST**：最近邻过滤, 直接取最近的像素颜色, 如(0.2, 0.5)会被映射为(0, 0.5)的像素颜色。
+  2. **GL_LINEAR**：线性过滤, 取最近的4个像素颜色, 并根据距离加权平均, 如(0.2, 0.5)会被映射为(0.2, 0.5)和(0.8, 0.5)的像素颜色的加权平均。
+* **纹理环绕**：是指当采样器采样的uv坐标超出[0, 1]范围时, 如何处理的问题。
+    1. **GL_REPEAT**：重复纹理图像, 如(1.2, 0.5)会被映射为(0.2, 0.5)。
+    2. **GL_MIRRORED_REPEAT**：镜像重复纹理图像, 如(1.2, 0.5)会被映射为(0.8, 0.5)。
+    3. **GL_CLAMP_TO_EDGE**：将超出范围的坐标 clamp 到边缘, 如(1.2, 0.5)会被映射为(1.0, 0.5)。
+    4. **GL_CLAMP_TO_BORDER**：将超出范围的坐标 clamp 到边框颜色, 需要额外设置边框颜色。
+    <img src="Screenshot/TextureWrapping.png" alt="TextureWrapping" width="1000px" height="auto">

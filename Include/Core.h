@@ -11,8 +11,9 @@
 // OpenGL第三方库头文件
 #include <Glad/glad.h> // note：glad头文件放在GLFW头文件之前，避免重复包含
 #include <GLFW/glfw3.h>
+#include "Application/stb_image.h"
 
 // 自定义头文件
-#include "../Wrapper/ErrorChecker.h"
+#include "Wrapper/ErrorChecker.h"
 
 #endif //GLRENDERER_CORE_H

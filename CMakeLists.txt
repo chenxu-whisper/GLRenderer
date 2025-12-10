@@ -1,41 +1,65 @@
-# 最小cmake版本
 cmake_minimum_required(VERSION 3.10)
-# 项目名称
 project(GLRenderer)
+
 # 设置C++标准
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# 定义着色器文件路径
-set(SHADER_FILES
-        "Asset/Shader/Vertex.vert"
-        "Asset/Shader/Fragment.frag"
+## 全局预编译宏
+add_definitions(-DDEBUG)
+
+# 设置输出目录
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
+set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
+
+# 添加头文件目录 - 确保所有头文件都能被正确找到
+include_directories(
+        ${CMAKE_SOURCE_DIR}/Include
+        ${CMAKE_SOURCE_DIR}/Include/Wrapper
+        ${CMAKE_SOURCE_DIR}/Include/Application
+        ${CMAKE_SOURCE_DIR}/Include/Framework
+        ${CMAKE_SOURCE_DIR}/ThirdParty/Include
+        ${CMAKE_SOURCE_DIR}/ThirdParty/Include/GLFW
+        ${CMAKE_SOURCE_DIR}/ThirdParty/Include/glad
 )
 
-# 为每个着色器文件创建复制命令
-foreach(SHADER ${SHADER_FILES})
-    # 获取目标路径
-    get_filename_component(SHADER_NAME ${SHADER} NAME)
-    set(DEST_PATH "${CMAKE_BINARY_DIR}/${SHADER}")
+# 收集所有源文件
+file(GLOB_RECURSE SOURCES
+        ${CMAKE_SOURCE_DIR}/Src/*.cpp
+        ${CMAKE_SOURCE_DIR}/Src/*.c
+)
 
-    # 创建自定义命令，当天源文件改变时执行复制
-    add_custom_command(
-            OUTPUT ${DEST_PATH}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/${SHADER} ${DEST_PATH}
-            DEPENDS ${CMAKE_SOURCE_DIR}/${SHADER}
-            COMMENT "Copying ${SHADER} to build directory"
-    )
-
-    # 将目标添加到列表中
-    list(APPEND SHADER_TARGETS ${DEST_PATH})
+# 查看收集到的源文件 - 用于调试
+message("收集到的源文件:")
+foreach(source ${SOURCES})
+    message("  ${source}")
 endforeach()
 
-# 创建自定义目标，依赖于所有着色器文件的复制
-add_custom_target(CopyShaders ALL DEPENDS ${SHADER_TARGETS})
+# 添加可执行文件
+add_executable(${PROJECT_NAME} ${SOURCES}
+        Src/Application/Texture.cpp
+        Include/Application/Texture.h)
 
-# 全局预编译宏
-add_definitions(-DDEBUG)
-# 添加src子目录
-add_subdirectory(Src)
+# 链接库
+target_link_libraries(${PROJECT_NAME}
+        ${CMAKE_SOURCE_DIR}/ThirdParty/Lib/libglfw3.a
+)
 
-# 确保主可执行文件依赖于着色器复制目标
-add_dependencies(GLRenderer CopyShaders)
+# 如果是Windows系统，添加额外的库
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME} opengl32)
+endif()
+
+# 添加资源目录编译定义，支持运行时直接从源目录加载资源
+# 这样程序可以直接访问源目录中的资源文件，修改后无需重新构建
+target_compile_definitions(${PROJECT_NAME} PRIVATE ASSET_DIR="${CMAKE_SOURCE_DIR}/Asset/")
+
+# 简化资源复制，只在构建时复制一次，开发时使用源目录资源
+add_custom_command(
+        TARGET ${PROJECT_NAME}
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/Asset
+        $<TARGET_FILE_DIR:${PROJECT_NAME}>/Asset
+        COMMENT "Copying assets to output directory..."
+)
