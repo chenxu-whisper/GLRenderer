@@ -36,9 +36,7 @@ foreach(source ${SOURCES})
 endforeach()
 
 # 添加可执行文件
-add_executable(${PROJECT_NAME} ${SOURCES}
-        Src/Application/Texture.cpp
-        Include/Application/Texture.h)
+add_executable(${PROJECT_NAME} ${SOURCES})
 
 # 链接库
 target_link_libraries(${PROJECT_NAME}

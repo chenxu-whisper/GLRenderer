@@ -1,4 +1,3 @@
-
 #include "Core.h"
 #include "Texture.h"
 #include "../Include/Wrapper/ErrorChecker.h"
@@ -119,12 +118,8 @@ void OnMouseScrollEvent(double xoffset, double yoffset)
     std::cout << "Mouse scroll: (" << xoffset << ", " << yoffset << ")" << std::endl;
 }
 
-GLuint triangleVAO = 0;
-GLuint rectangleVAO = 0;
-Shader* shader = nullptr;
-Texture* texture = nullptr;
-
 // 准备VAO, VBO
+GLuint triangleVAO = 0;
 void PrepareTriangleData()
 {
     // 生成VBO
@@ -197,6 +192,7 @@ void PrepareTriangleData()
     CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 
+GLuint rectangleVAO = 0;
 void PrepareRectangleData()
 {
     // 生成VBO
@@ -297,6 +293,8 @@ void PrepareRectangleData()
     // 注意：不要在这里解绑EBO，解绑这会导致VAO记录一个无效的EBO绑定（0）, 后续绘制时会使用默认的EBO（0）, 导致绘制错误
 }
 
+Shader* shader = nullptr;
+Texture* texture = nullptr;
 void Render()
 {
     /* 清除颜色缓冲区，将颜色缓冲区的颜色设置为指定的颜色值
@@ -375,6 +373,7 @@ bool CreateWindow()
     // 设置视口大小及清除颜色
     CHECK_GL_ERROR(glViewport(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT));
     CHECK_GL_ERROR(glClearColor(0.1f, 0.1f, 0.2f, 1.0f));
+
     // 执行渲染循环
     while (APP->WindowUpdate())
     {

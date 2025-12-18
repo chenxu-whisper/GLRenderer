@@ -47,28 +47,9 @@ void Texture::LoadTexture(const std::string& filePath, unsigned int textureUnit)
      * @param texture: 要绑定的纹理对象ID，这里是texture
      */
     glBindTexture(GL_TEXTURE_2D, mTextureID);
-    /* 设置纹理参数，过滤方式
-     * @param target: 纹理目标，这里是GL_TEXTURE_2D，即2D纹理
-     * @param pname: 纹理参数名称，这里是GL_TEXTURE_MAG_FILTER，即 magnification filter
-     * @param param: 纹理参数值，这里是GL_LINEAR，即线性过滤
-     */
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    /* 设置纹理参数，过滤方式
-     * @param target: 纹理目标，这里是GL_TEXTURE_2D，即2D纹理
-     * @param pname: 纹理参数名称，这里是GL_TEXTURE_MIN_FILTER，即 minification filter
-     * @param param: 纹理参数值，这里是GL_NEAREST，即最近邻过滤
-     */
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    /* 设置纹理参数，环绕方式
-     * @param target: 纹理目标，这里是GL_TEXTURE_2D，即2D纹理
-     * @param pname: 纹理参数名称，这里是GL_TEXTURE_WRAP_T，即 texture wrap parameter for the S coordinate
-     * @param param: 纹理参数值，这里是GL_REPEAT，即重复环绕
-     */
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // T / V
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // U / S
 
     // 根据通道数设置格式
-    GLenum format;
+    int format;
     if (mChannels == 1)
         format = GL_RED;
     else if (mChannels == 3)
@@ -82,6 +63,7 @@ void Texture::LoadTexture(const std::string& filePath, unsigned int textureUnit)
 
         return;
     }
+
     /* 加载图像数据到纹理对象，开辟显存
      * @param target: 纹理目标，这里是GL_TEXTURE_2D，即2D纹理
      * @param level: 纹理级别（mipmap级别），这里是0，即基本级别
@@ -94,6 +76,25 @@ void Texture::LoadTexture(const std::string& filePath, unsigned int textureUnit)
      * @param data: 指向图像数据的指针，这里是imageData
      */
     glTexImage2D(GL_TEXTURE_2D, 0, format, mWidth, mHeight, 0, format, GL_UNSIGNED_BYTE, imageData);
+
+    /* 生成MIPMAP链
+    * @param target: 纹理目标，这里是GL_TEXTURE_2D，即2D纹理
+    */
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    /* 设置纹理参数，过滤方式
+     * @param target: 纹理目标，这里是GL_TEXTURE_2D，即2D纹理
+     * @param pname: 纹理参数名称，这里是GL_TEXTURE_MIN_FILTER，即 minification filter
+     * @param param: 纹理参数值，GL_NEAREST，即最近邻过滤，GL_LINEAR，即线性过滤
+     */
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    /* 设置纹理参数，环绕方式
+     * @param target: 纹理目标，这里是GL_TEXTURE_2D，即2D纹理
+     * @param pname: 纹理参数名称，这里是GL_TEXTURE_WRAP_T，即 texture wrap parameter for the S coordinate
+     * @param param: 纹理参数值，这里是GL_REPEAT，即重复环绕
+     */
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // T / V
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // U / S
 
     // 释放图像数据内存
     stbi_image_free(imageData);
