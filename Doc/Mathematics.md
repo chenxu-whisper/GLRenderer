@@ -197,6 +197,7 @@ graph TD
     \end{bmatrix}
     \times
     \begin{bmatrix} x \\ y \\ z \\ w \end{bmatrix}
+    =
     \begin{bmatrix}
     m_{00}x + m_{01}y + m_{02}z + m_{03}w \\
     m_{10}x + m_{11}y + m_{12}z + m_{13}w \\
@@ -214,19 +215,19 @@ graph TD
     0 & 0 & 0 & 1
     \end{bmatrix}
     \cdot
-    \begin{pmatrix}
+    \begin{bmatrix}
     x \\
     y \\
     z \\
     1
-    \end{pmatrix}
+    \end{bmatrix}
     =
-    \begin{pmatrix}
+    \begin{bmatrix}
     S_1 \cdot x \\
     S_2 \cdot y \\
     S_3 \cdot z \\
     1
-    \end{pmatrix}
+    \end{bmatrix}
     $
     <br><br>
   * 位移（Translation）：将单位矩阵的主对角线元素分别与向量对应的元素相加。
@@ -238,19 +239,19 @@ graph TD
     0 & 0 & 0 & 1
     \end{bmatrix}
     \cdot
-    \begin{pmatrix}
+    \begin{bmatrix}
     x \\
     y \\
     z \\
     1
-    \end{pmatrix}
+    \end{bmatrix}
     =
-    \begin{pmatrix}
+    \begin{bmatrix}
     x + T_1 \\
     y + T_2 \\
     z + T_3 \\
     1
-    \end{pmatrix}
+    \end{bmatrix}
     $
     <br><br>
   * 旋转（Rotation）：
@@ -263,19 +264,19 @@ graph TD
       0 & 0 & 0 & 1
       \end{bmatrix}
       \cdot
-      \begin{pmatrix}
+      \begin{bmatrix}
       x \\
       y \\
       z \\
       1
-      \end{pmatrix}
+      \end{bmatrix}
       =
-      \begin{pmatrix}
+      \begin{bmatrix}
       x \\
       \cos\theta \cdot y - \sin\theta \cdot z \\
       \sin\theta \cdot y + \cos\theta \cdot z \\
       1
-      \end{pmatrix}
+      \end{bmatrix}
       $
       <br><br>
     * 沿Y轴旋转：
@@ -287,19 +288,19 @@ graph TD
       0 & 0 & 0 & 1
       \end{bmatrix}
       \cdot
-      \begin{pmatrix}
+      \begin{bmatrix}
       x \\
       y \\
       z \\
       1
-      \end{pmatrix}
+      \end{bmatrix}
       =
-      \begin{pmatrix}
+      \begin{bmatrix}
       \cos\theta \cdot x + \sin\theta \cdot z \\
       y \\
       -\sin\theta \cdot x + \cos\theta \cdot z \\
       1
-      \end{pmatrix}
+      \end{bmatrix}
       $
       <br><br>
     * 沿Z轴旋转：
@@ -311,19 +312,19 @@ graph TD
       0 & 0 & 0 & 1
       \end{bmatrix}
       \cdot
-      \begin{pmatrix}
+      \begin{bmatrix}
       x \\
       y \\
       z \\
       1
-      \end{pmatrix}
+      \end{bmatrix}
       =
-      \begin{pmatrix}
+      \begin{bmatrix}
       \cos\theta \cdot x - \sin\theta \cdot y \\
       \sin\theta \cdot x + \cos\theta \cdot y \\
       z \\
       1
-      \end{pmatrix}
+      \end{bmatrix}
       $ 
       <br><br>
     * 组合旋转：将多个旋转矩阵按顺序相乘，实现复合旋转（如 $R_{xyz} = R_{x} \times R_{y} \times R_{z}$）， 注意：旋转顺序对结果有影响（如 $R_{xyz}$ 与 $R_{zxy}$ 不同）。<br><br>
@@ -452,7 +453,7 @@ graph TD
 * **顶点变换流程**：
   1. 局部空间顶点（vec3 pos）→ 齐次坐标（vec4(pos, 1.0f)，w=1表示点）；
   2. 乘以MVP矩阵：clipPos = MVP × vec4(pos, 1.0f)；
-  3. 透视除法：ndcPos = clipPos / clipPos.w（将裁剪空间 → 归一化设备坐标，NDC 范围 [-1,1]×[-1,1]×[-1,1]）；
+  3. 透视除法：ndcPos = clipPos / clipPos.w（将裁剪空间 → 归一化设备坐标，NDC范围[-1,1]×[-1,1]×[-1,1]）；
   4. 视口变换：OpenGL自动将NDC转换为屏幕空间坐标（基于 glViewport 设置的分辨率）。
 * **GLSL顶点着色器实战**：
   ```glsl

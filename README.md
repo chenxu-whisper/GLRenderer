@@ -8,6 +8,8 @@
 * **[doc](https://github.com/chenxu-whisper/GLRenderer/tree/main/doc)**：项目文档目录，包含一些笔记。
   * [LearnOpenGL](doc/LearnOpenGL.md)
   * [Algorithms](doc/Algorithms.md)
+  * [Mathematics](doc/Mathematics.md)
+  * [Mipmap](doc/Mipmap.md)
 * **[asset](https://github.com/chenxu-whisper/GLRenderer/tree/main/asset)**：项目资源目录，包含一些模型、纹理等资源。
 
 ---
