@@ -5,6 +5,7 @@ in vec2 vTexCoord;
 out vec4 FragColor;
 
 uniform sampler2D uColorTexture;
+uniform vec4 uColor;
 uniform float uTime;
 
 void main()
@@ -13,7 +14,7 @@ void main()
     vec4 color = texture(uColorTexture, uv);
 
     float ease = sin(uTime) * 0.5 + 0.5;
-    FragColor = vec4(color * ease);
+    FragColor = vec4(color * ease * uColor);
 
 //    FragColor = vec4(vec3(0.5) , 1.0);
 }

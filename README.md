@@ -3,14 +3,14 @@
 ---
 
 ### 项目结构：
-* **[src](https://github.com/chenxu-whisper/GLRenderer/tree/main/src)**：项目源代码目录，包含所有OpenGL相关的代码。
-* **[thirdParty](https://github.com/chenxu-whisper/GLRenderer/tree/main/thirdParty)**：第三方库目录，包含项目依赖的外部库。
-* **[doc](https://github.com/chenxu-whisper/GLRenderer/tree/main/doc)**：项目文档目录，包含一些笔记。
+* **[Src](https://github.com/chenxu-whisper/GLRenderer/tree/main/src)**：项目源代码目录，包含所有OpenGL相关的代码。
+* **[ThirdParty](https://github.com/chenxu-whisper/GLRenderer/tree/main/thirdParty)**：第三方库目录，包含项目依赖的外部库。
+* **[Doc](https://github.com/chenxu-whisper/GLRenderer/tree/main/doc)**：项目文档目录，包含一些笔记。
   * [LearnOpenGL](doc/LearnOpenGL.md)
   * [Algorithms](doc/Algorithms.md)
   * [Mathematics](doc/Mathematics.md)
   * [Mipmap](doc/Mipmap.md)
-* **[asset](https://github.com/chenxu-whisper/GLRenderer/tree/main/asset)**：项目资源目录，包含一些模型、纹理等资源。
+* **[Asset](https://github.com/chenxu-whisper/GLRenderer/tree/main/asset)**：项目资源目录，包含一些模型、纹理等资源。
 
 ---
 

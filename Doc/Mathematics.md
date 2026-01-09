@@ -4,6 +4,8 @@
 > * [3Blue1Brown-线性代数的本质](https://www.bilibili.com/video/BV1ys411472E/?spm_id_from=333.1387.homepage.video_card.click&vd_source=ea1126481fe967c5595662e4c804d212)
 > * [Shader for 游戏开发(数学篇)](https://space.bilibili.com/28019709/lists/1256588?type=series)
 
+---
+
 <!-- TOC -->
 * [Mathematics for Computer Graphics](#mathematics-for-computer-graphics)
   * [三角函数 （Trigonometric Functions）](#三角函数-trigonometric-functions)

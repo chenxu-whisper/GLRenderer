@@ -29,8 +29,10 @@ public:
      * @param value: 要设置的整数数值(要激活的纹理单元，如GL_TEXTURE0、GL_TEXTURE1...GL_TEXTURE15等)
      */
     void SetIntUniform(const std::string& name, int value) const;
-    // 暂时没有glm库
-    // void SetVec3Uniform(const std::string& name, const glm::vec3& value) const;
+    // 设置vec3类型的uniform变量值
+    void SetVec3Uniform(const std::string& name, const glm::vec3& value) const;
+    //
+    void SetVec4Uniform(const std::string& name, const glm::vec4& value) const;
 
 private:
     /* 检查着色器编译或链接错误

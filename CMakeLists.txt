@@ -21,6 +21,7 @@ include_directories(
         ${CMAKE_SOURCE_DIR}/ThirdParty/Include
         ${CMAKE_SOURCE_DIR}/ThirdParty/Include/GLFW
         ${CMAKE_SOURCE_DIR}/ThirdParty/Include/glad
+        ${CMAKE_SOURCE_DIR}/ThirdParty/Include/glm
 )
 
 # 收集所有源文件

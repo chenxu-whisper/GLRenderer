@@ -306,6 +306,7 @@ void Render()
     shader->UseShaderProgram();
     shader->SetFloatUniform("uTime", static_cast<float>(glfwGetTime())); // glfwGetTime()返回当前时间，单位为秒
     shader->SetIntUniform("uColorTexture", 0);
+    shader->SetVec4Uniform("uColor", glm::vec4(0.7f, 0.1f, 0.3f, 1.0f));
 
     // 绘制三角形
     /* 绑定VAO，将指定的VAO绑定到当前OpenGL状态机，后续的顶点属性配置和索引绘制操作将使用该VAO的状态
