@@ -23,6 +23,10 @@ public:
     static Application* GetInstance();
     // 初始化窗口
     bool WindowInit(const uint8_t& major = 4, const uint8_t& minor = 6, const uint32_t& width = 800, const uint32_t& height = 600, const char* title = "Window");
+    // 获取窗口宽度
+    uint32_t GetWindowWidth() const;
+    // 获取窗口高度
+    uint32_t GetWindowHeight() const;
     // 更新窗口
     bool WindowUpdate() const;
     // 销毁窗口

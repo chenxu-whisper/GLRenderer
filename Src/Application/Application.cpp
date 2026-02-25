@@ -66,6 +66,10 @@ bool Application::WindowInit(const uint8_t& major, const uint8_t& minor, const u
     return true;
 }
 
+uint32_t Application::GetWindowWidth() const { return mWidth; }
+
+uint32_t Application::GetWindowHeight() const { return mHeight; }
+
 bool Application::WindowUpdate() const
 {
     // 检查是否关闭窗口

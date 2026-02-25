@@ -293,6 +293,60 @@ void PrepareRectangleData()
     // 注意：不要在这里解绑EBO，解绑这会导致VAO记录一个无效的EBO绑定（0）, 后续绘制时会使用默认的EBO（0）, 导致绘制错误
 }
 
+glm::mat4x4 modelMat = glm::mat4x4(1.0f);
+void DoTransform()
+{
+    /* 平移变换
+     * @param transMat: 平移变换矩阵
+     * @param transVec: 平移向量，这里是(0.5f, -0.5f, 0.0f)
+     */
+    glm::mat4x4 transMat = glm::mat4x4(1.0f);
+    transMat = glm::translate(transMat, glm::vec3(0.5f, -0.5f, 0.0f));
+
+    /* 缩放变换
+     * @param scaleMat: 缩放变换矩阵
+     * @param scaleVec: 缩放向量，这里是(0.5f, 0.5f, 1.0f)
+     */
+    glm::mat4x4 scaleMat = glm::mat4x4(1.0f);
+    scaleMat = glm::scale(scaleMat, glm::vec3(0.5f, 0.5f, 1.0f));
+
+    /* 旋转变换
+     * @param rotateMat: 旋转变换矩阵
+     * @param angle: 旋转角度，这里是glfwGetTime()，即当前时间，单位为秒
+     * @param axis: 旋转轴，这里是(0.0f, 0.0f, 1.0f)，即绕Z轴旋转
+     */
+    glm::mat4x4 rotateMat = glm::mat4x4(1.0f);
+    rotateMat = glm::rotate(rotateMat, static_cast<float>(glfwGetTime()), glm::vec3(0.0f, 0.0f, 1.0f));
+
+    // 变换矩阵
+    modelMat = rotateMat;
+}
+
+glm::mat4 viewMat = glm::mat4x4(1.0f);
+void PrepareCamera()
+{
+    /* 相机变换
+     * @param viewMat: 相机变换矩阵(单位矩阵)
+     * @param eye: 相机位置，在NDC空间中[-1, 1]
+     * @param center: 相机目标位置
+     * @param up: 相机向上方向
+     */
+    viewMat = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.5f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+}
+
+glm::mat4 projectionMat = glm::mat4x4(1.0f);
+void PrepareProjection()
+{
+    /* 投影变换
+     * @param projectionMat: 投影变换矩阵(单位矩阵)
+     * @param fovy: 垂直视野角度，单位为弧度，这里是glm::radians将角度转换为弧度
+     * @param aspect: 宽高比
+     * @param zNear: 近裁剪平面距离
+     * @param zFar: 远裁剪平面距离
+     */
+    projectionMat = glm::perspective(glm::radians(120.0f), static_cast<float>(APP->GetWindowWidth()) / static_cast<float>(APP->GetWindowHeight()), 0.01f, 100.0f);
+}
+
 Shader* shader = nullptr;
 Texture* texture = nullptr;
 void Render()
@@ -307,6 +361,9 @@ void Render()
     shader->SetFloatUniform("uTime", static_cast<float>(glfwGetTime())); // glfwGetTime()返回当前时间，单位为秒
     shader->SetIntUniform("uColorTexture", 0);
     shader->SetVec4Uniform("uColor", glm::vec4(0.7f, 0.1f, 0.3f, 1.0f));
+    shader->SetMat4x4Uniform("uModelMatrix", modelMat);
+    shader->SetMat4x4Uniform("uViewMatrix", viewMat);
+    shader->SetMat4x4Uniform("uProjectionMatrix", projectionMat);
 
     // 绘制三角形
     /* 绑定VAO，将指定的VAO绑定到当前OpenGL状态机，后续的顶点属性配置和索引绘制操作将使用该VAO的状态
@@ -368,16 +425,22 @@ bool CreateWindow()
     texture = new Texture();
     texture->LoadTexture(ASSET_DIR "Texture/Bird.png", 0);
 
-    // 准备四边形数据
-    PrepareRectangleData();
-
     // 设置视口大小及清除颜色
     CHECK_GL_ERROR(glViewport(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT));
     CHECK_GL_ERROR(glClearColor(0.1f, 0.1f, 0.2f, 1.0f));
 
+    // 准备四边形数据
+    PrepareRectangleData();
+    // 准备相机
+    PrepareCamera();
+    // 准备投影变换
+    PrepareProjection();
+
     // 执行渲染循环
     while (APP->WindowUpdate())
     {
+        // 变换矩阵
+        DoTransform();
         // 渲染
         Render();
     }

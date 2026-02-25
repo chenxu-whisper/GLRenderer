@@ -31,8 +31,16 @@ public:
     void SetIntUniform(const std::string& name, int value) const;
     // 设置vec3类型的uniform变量值
     void SetVec3Uniform(const std::string& name, const glm::vec3& value) const;
-    //
+    /* 设置vec4类型的uniform变量值
+     * @param name: uniform变量的名称，用于在着色器中定位该变量
+     * @param value: 要设置的vec4向量值
+     */
     void SetVec4Uniform(const std::string& name, const glm::vec4& value) const;
+    /* 设置4x4矩阵类型的uniform变量值
+     * @param name: uniform变量的名称，用于在着色器中定位该变量
+     * @param value: 要设置的4x4矩阵值
+     */
+    void SetMat4x4Uniform(const std::string& name, const glm::mat4& value) const;
 
 private:
     /* 检查着色器编译或链接错误

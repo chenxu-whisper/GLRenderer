@@ -142,6 +142,23 @@ void Shader::SetVec4Uniform(const std::string &name, const glm::vec4 &value) con
     CHECK_GL_ERROR(glUniform4fv(location, 1, &value[0]));
 }
 
+void Shader::SetMat4x4Uniform(const std::string &name, const glm::mat4 &value) const
+{
+    GLint location = glGetUniformLocation(mShaderProgram, name.c_str());
+    if (location == -1)
+    {
+        std::cerr << "ERROR::SHADER::UNIFORM::NOT_FOUND - Name: " << name << std::endl;
+        return;
+    }
+    /*
+     * @param location: uniform变量在着色器程序中的位置索引
+     * @param count: 要设置的uniform变量数量，这里是1个
+     * @param transpose: 是否转置矩阵，GL_FALSE表示不转置 GLSL默认列主序，所以这里不转置
+     * @param value: 指向矩阵数据的指针，这里是value的地址
+     */
+    CHECK_GL_ERROR(glUniformMatrix4fv(location, 1, GL_FALSE, &value[0][0]));
+}
+
 void Shader::CheckShaderError(GLuint target, const std::string& targetType)
 {
     GLint success;
