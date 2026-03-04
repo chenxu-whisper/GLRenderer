@@ -1,6 +1,8 @@
 #ifndef APPLICATON_H
 #define APPLICATION_H
 
+#include "Core.h"
+
 // 应用实例访问宏
 #define APP Application::GetInstance()
 
@@ -27,6 +29,8 @@ public:
     uint32_t GetWindowWidth() const;
     // 获取窗口高度
     uint32_t GetWindowHeight() const;
+    // 获取鼠标位置
+    void GetCursorPos(double& x, double& y);
     // 更新窗口
     bool WindowUpdate() const;
     // 销毁窗口
@@ -36,9 +40,9 @@ public:
     // 设置键盘输入回调函数
     void SetKeyCallback(KeyBoardCallback callback);
     // 添加鼠标事件回调函数设置
-    void SetMouseButtonCallback(MouseButtonCallback callback);
-    void SetMouseMoveCallback(MouseMoveCallback callback);
-    void SetMouseScrollCallback(MouseScrollCallback callback);
+    void SetMouseCallback(MouseButtonCallback callback);
+    void SetCursorCallback(MouseMoveCallback callback);
+    void SetScrollCallback(MouseScrollCallback callback);
 
 private:
     /* @note: 需要用static，静态成员函数没有隐式的this指针（C++类内函数指针）:

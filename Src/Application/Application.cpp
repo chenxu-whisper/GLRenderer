@@ -70,6 +70,11 @@ uint32_t Application::GetWindowWidth() const { return mWidth; }
 
 uint32_t Application::GetWindowHeight() const { return mHeight; }
 
+void Application::GetCursorPos(double &x, double &y)
+{
+    glfwGetCursorPos(mWindow, &x, &y);
+}
+
 bool Application::WindowUpdate() const
 {
     // 检查是否关闭窗口
@@ -96,9 +101,9 @@ void Application::WindowDestroy() const
 // 事件响应
 void Application::SetResizeCallback(ResizeCallback callback) { mResizeCallback = callback; } // 窗口大小改变回调函数
 void Application::SetKeyCallback(KeyBoardCallback callback) { mKeyCallback = callback; }  // 键盘输入回调函数
-void Application::SetMouseButtonCallback(MouseButtonCallback callback) { mMouseButtonCallback = callback; } // 鼠标按钮回调函数
-void Application::SetMouseMoveCallback(MouseMoveCallback callback) { mMouseMoveCallback = callback; } // 鼠标移动回调函数
-void Application::SetMouseScrollCallback(MouseScrollCallback callback) { mMouseScrollCallback = callback; } // 鼠标滚轮回调函数
+void Application::SetMouseCallback(MouseButtonCallback callback) { mMouseButtonCallback = callback; } // 鼠标按钮回调函数
+void Application::SetCursorCallback(MouseMoveCallback callback) { mMouseMoveCallback = callback; } // 鼠标移动回调函数
+void Application::SetScrollCallback(MouseScrollCallback callback) { mMouseScrollCallback = callback; } // 鼠标滚轮回调函数
 
 // 回调函数实现
 void Application::FramebufferSizeCallbackFunc(GLFWwindow *window, int width, int height)
@@ -139,6 +144,9 @@ void Application::MouseMoveCallbackFunc(GLFWwindow* window, double xpos, double 
 
 void Application::MouseScrollCallbackFunc(GLFWwindow* window, double xoffset, double yoffset)
 {
+    // 忽略水平滚动
+    xoffset = 0.0f;
+
     Application* self = static_cast<Application*>(glfwGetWindowUserPointer(window));
     if (self != nullptr && self->mMouseScrollCallback != nullptr)
         self->mMouseScrollCallback(xoffset, yoffset);

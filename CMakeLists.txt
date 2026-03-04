@@ -37,7 +37,20 @@ foreach(source ${SOURCES})
 endforeach()
 
 # 添加可执行文件
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES}
+        Src/Application/Camera/Camera.cpp
+        Include/Application/Camera/Camera.h
+        Src/Application/Camera/OrthographicCamera.cpp
+        Include/Application/Camera/OrthographicCamera.h
+        Src/Application/Camera/PerspectiveCamera.cpp
+        Include/Application/Camera/PerspectiveCamera.h
+        Src/Application/Camera/CameraControl.cpp
+        Include/Application/Camera/CameraControl.h
+        Src/Application/Camera/TrackBallCameraControl.cpp
+        Include/Application/Camera/TrackBallCameraControl.h
+        Src/Application/Camera/GameCameraControl.cpp
+        Include/Application/Camera/GameCameraControl.h
+)
 
 # 链接库
 target_link_libraries(${PROJECT_NAME}

@@ -1,8 +1,12 @@
 #include "Core.h"
-#include "Texture.h"
-#include "../Include/Wrapper/ErrorChecker.h"
+#include "Application/Texture.h"
+#include "Wrapper/ErrorChecker.h"
 #include "Application/Application.h"
 #include "Framework/Shader.h"
+#include "Application/Camera/PerspectiveCamera.h"
+#include "Application/Camera/OrthographicCamera.h"
+#include "Application/Camera/TrackBallCameraControl.h"
+#include "Application/Camera/GameCameraControl.h"
 
 // 窗体参数
 #define MAJOR_VERSION 4 // OpenGL主版本号
@@ -12,6 +16,8 @@
 #define WINDOW_TITLE "GLRenderer Window"  // 窗口标题
 #define VIEWPORT_WIDTH 800  // 视口宽度
 #define VIEWPORT_HEIGHT 600 // 视口高度
+
+
 
 
 /*顶点数据 （位置 + 颜色）
@@ -53,70 +59,6 @@ const unsigned int indices[] =
     0, 1, 2, // 第一个三角形
     2, 3, 0 // 第二个三角形
 };
-
-// 事件操作
-void OnWindowResizeEvent(int width, int height)
-{
-    // 更新视口大小
-    CHECK_GL_ERROR(glViewport(0, 0, width, height));
-}
-
-void OnKeyBoardEvent(int key, int scancode, int action, int mods)
-{
-    // 检查是否按下了ESC键
-    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
-    {
-        std::cout << "Space key pressed!" << std::endl;
-    }
-}
-
-void OnMouseButtonEvent(int button, int action, int mods)
-{
-    if (action == GLFW_PRESS)
-    {
-        switch (button)
-        {
-            case GLFW_MOUSE_BUTTON_LEFT:
-                std::cout << "Left mouse button pressed!" << std::endl;
-                break;
-            case GLFW_MOUSE_BUTTON_RIGHT:
-                std::cout << "Right mouse button pressed!" << std::endl;
-                break;
-            case GLFW_MOUSE_BUTTON_MIDDLE:
-                std::cout << "Middle mouse button pressed!" << std::endl;
-                break;
-            default: break;
-        }
-    }
-    else if (action == GLFW_RELEASE)
-    {
-        switch (button)
-        {
-            case GLFW_MOUSE_BUTTON_LEFT:
-                std::cout << "Left mouse button released!" << std::endl;
-                break;
-            case GLFW_MOUSE_BUTTON_RIGHT:
-                std::cout << "Right mouse button released!" << std::endl;
-                break;
-            case GLFW_MOUSE_BUTTON_MIDDLE:
-                std::cout << "Middle mouse button released!" << std::endl;
-                break;
-            default: break;
-        }
-    }
-}
-
-void OnMouseMoveEvent(double xpos, double ypos)
-{
-    // 输出鼠标位置信息
-    std::cout << "Mouse position: (" << xpos << ", " << ypos << ")" << std::endl;
-}
-
-void OnMouseScrollEvent(double xoffset, double yoffset)
-{
-    // 输出鼠标滚轮信息
-    std::cout << "Mouse scroll: (" << xoffset << ", " << yoffset << ")" << std::endl;
-}
 
 // 准备VAO, VBO
 GLuint triangleVAO = 0;
@@ -322,31 +264,97 @@ void DoTransform()
     modelMat = rotateMat;
 }
 
-glm::mat4 viewMat = glm::mat4x4(1.0f);
+Camera* camera = nullptr;
+CameraControl* cameraControl = nullptr;
 void PrepareCamera()
 {
-    /* 相机变换
-     * @param viewMat: 相机变换矩阵(单位矩阵)
-     * @param eye: 相机位置，在NDC空间中[-1, 1]
-     * @param center: 相机目标位置
-     * @param up: 相机向上方向
-     */
-    viewMat = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.5f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    // 相机
+    camera = new PerspectiveCamera(90.0f, static_cast<float>(APP->GetWindowWidth()) / static_cast<float>(APP->GetWindowHeight()), 0.01f, 100.0f);
+    // camera = new OrthographicCamera(-1.0f, 1.0f, -1.0f, 1.0f, 0.01f, 100.0f);
+    cameraControl = new GameCameraControl();
+    // cameraControl = new TrackBallCameraControl();
+    cameraControl->SetCamera(camera);
+    cameraControl->SetSensitivity(0.2f);
 }
 
-glm::mat4 projectionMat = glm::mat4x4(1.0f);
-void PrepareProjection()
+// 事件操作
+void OnWindowResizeEvent(int width, int height)
 {
-    /* 投影变换
-     * @param projectionMat: 投影变换矩阵(单位矩阵)
-     * @param fovy: 垂直视野角度，单位为弧度，这里是glm::radians将角度转换为弧度
-     * @param aspect: 宽高比
-     * @param zNear: 近裁剪平面距离
-     * @param zFar: 远裁剪平面距离
-     */
-    projectionMat = glm::perspective(glm::radians(120.0f), static_cast<float>(APP->GetWindowWidth()) / static_cast<float>(APP->GetWindowHeight()), 0.01f, 100.0f);
+    // 更新视口大小
+    CHECK_GL_ERROR(glViewport(0, 0, width, height));
 }
 
+void OnKeyEvent(int key, int scancode, int action, int mods)
+{
+    // 处理相机控制
+    cameraControl->OnKey(key, action, mods);
+
+    // 检查是否按下了Space键
+    // if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+    // {
+    //     std::cout << "Space key pressed!" << std::endl;
+    // }
+}
+
+void OnMouseEvent(int button, int action, int mods)
+{
+    double xpos, ypos;
+    APP->GetCursorPos(xpos, ypos);
+    // 处理相机控制
+    cameraControl->OnMouse(button, action, xpos, ypos);
+
+    // if (action == GLFW_PRESS)
+    // {
+    //     switch (button)
+    //     {
+    //         case GLFW_MOUSE_BUTTON_LEFT:
+    //             std::cout << "Left mouse button pressed!" << std::endl;
+    //             break;
+    //         case GLFW_MOUSE_BUTTON_RIGHT:
+    //             std::cout << "Right mouse button pressed!" << std::endl;
+    //             break;
+    //         case GLFW_MOUSE_BUTTON_MIDDLE:
+    //             std::cout << "Middle mouse button pressed!" << std::endl;
+    //             break;
+    //         default: break;
+    //     }
+    // }
+    // else if (action == GLFW_RELEASE)
+    // {
+    //     switch (button)
+    //     {
+    //         case GLFW_MOUSE_BUTTON_LEFT:
+    //             std::cout << "Left mouse button released!" << std::endl;
+    //             break;
+    //         case GLFW_MOUSE_BUTTON_RIGHT:
+    //             std::cout << "Right mouse button released!" << std::endl;
+    //             break;
+    //         case GLFW_MOUSE_BUTTON_MIDDLE:
+    //             std::cout << "Middle mouse button released!" << std::endl;
+    //             break;
+    //         default: break;
+    //     }
+    // }
+}
+
+void OnCursorEvent(double xpos, double ypos)
+{
+    // 处理相机控制
+    cameraControl->OnCursor(xpos, ypos);
+
+    // // 输出鼠标位置信息
+    // std::cout << "Mouse position: (" << xpos << ", " << ypos << ")" << std::endl;
+}
+
+void OnScrollEvent(double xoffset, double yoffset)
+{
+    // 忽略水平滚动
+    xoffset = 0.0f;
+    // 处理相机控制
+    cameraControl->OnScroll(xoffset, yoffset);
+}
+
+// 渲染
 Shader* shader = nullptr;
 Texture* texture = nullptr;
 void Render()
@@ -362,8 +370,10 @@ void Render()
     shader->SetIntUniform("uColorTexture", 0);
     shader->SetVec4Uniform("uColor", glm::vec4(0.7f, 0.1f, 0.3f, 1.0f));
     shader->SetMat4x4Uniform("uModelMatrix", modelMat);
-    shader->SetMat4x4Uniform("uViewMatrix", viewMat);
-    shader->SetMat4x4Uniform("uProjectionMatrix", projectionMat);
+    shader->SetMat4x4Uniform("uViewMatrix", camera->GetViewMatrix());
+    shader->SetMat4x4Uniform("uProjectionMatrix", camera->GetProjectionMatrix());
+
+
 
     // 绘制三角形
     /* 绑定VAO，将指定的VAO绑定到当前OpenGL状态机，后续的顶点属性配置和索引绘制操作将使用该VAO的状态
@@ -412,11 +422,11 @@ bool CreateWindow()
     }
     // 事件响应：窗口大小改变
     APP->SetResizeCallback(OnWindowResizeEvent);
-    APP->SetKeyCallback(OnKeyBoardEvent);
+    APP->SetKeyCallback(OnKeyEvent);
     // 设置鼠标事件回调
-    APP->SetMouseButtonCallback(OnMouseButtonEvent);
-    APP->SetMouseMoveCallback(OnMouseMoveEvent);
-    APP->SetMouseScrollCallback(OnMouseScrollEvent);
+    APP->SetMouseCallback(OnMouseEvent);
+    APP->SetCursorCallback(OnCursorEvent);
+    APP->SetScrollCallback(OnScrollEvent);
 
     // 始化shader对象
     shader = new Shader();
@@ -433,14 +443,14 @@ bool CreateWindow()
     PrepareRectangleData();
     // 准备相机
     PrepareCamera();
-    // 准备投影变换
-    PrepareProjection();
 
     // 执行渲染循环
     while (APP->WindowUpdate())
     {
         // 变换矩阵
-        DoTransform();
+        // DoTransform();
+        // 更新相机变换矩阵
+        cameraControl->Update();
         // 渲染
         Render();
     }

@@ -394,5 +394,6 @@ namespace glm
 	}
 
 	/// @}
+	void rotate(glm::mat4 m, double angle, glm::vec3 vec);
 }//namespace glm
 

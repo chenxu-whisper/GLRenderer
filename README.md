@@ -33,7 +33,7 @@
   * 流程绘制/渲染管线
      * 顶点着色器（Vertex Shader）
      * 片段着色器（Fragment Shader）
-     * 几何着色器（Geometry Shader）
+     * ~~几何着色器（Geometry Shader）~~
   * 纹理采样
     * 纹理对象（Texture Object）
     * 纹理坐标（Texture Coordinates）
@@ -43,10 +43,17 @@
     * 向量（Vector）
     * 矩阵（Matrix）
     * 变换（Transformation）
-  * 相机系统（Camera）
-    * 透视投影（Perspective Projection）
-    * 正交投影（Orthographic Projection）
+    * 模型矩阵（Model Matrix）
     * 视图矩阵（View Matrix）
+    * 投影矩阵（Projection Matrix）
+      * 正交投影（Orthographic Projection）
+      * 透视投影（Perspective Projection）
+  * 相机系统（Camera）
+     * 游戏相机（Game Camera）
+     * 球相机（Sphere Camera）
+  * 深度测试（Depth Testing）
+    * 深度缓冲区（Depth Buffer）
+    * 深度测试函数（Depth Test Function）
   
 * **[intermediate](https://github.com/ByteDance/GLRenderer/tree/intermediate)**：中级分支，包括OpenGL中级知识：
 
