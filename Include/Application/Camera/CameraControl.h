@@ -59,7 +59,7 @@ protected:
     float mCurrentX = 0.0f;
     float mCurrentY = 0.0f;
     // 鼠标灵敏度
-    float mSensitivity = 0.2f;
+    float mSensitivity = 0.1f;
     // 相机缩放速度
     float mScaleSpeed = 0.1f;
     // 按键映射表

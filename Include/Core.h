@@ -4,6 +4,7 @@
 // 系统头文件
 #include <iostream>
 #include <string>
+#include <memory>
 #include <sstream>
 #include <fstream>
 #include <assert.h>

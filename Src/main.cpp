@@ -1,6 +1,5 @@
 #include "Core.h"
 #include "Application/Texture.h"
-#include "Wrapper/ErrorChecker.h"
 #include "Application/Application.h"
 #include "Framework/Shader.h"
 #include "Application/Camera/PerspectiveCamera.h"
@@ -18,19 +17,18 @@
 #define VIEWPORT_HEIGHT 600 // 视口高度
 
 
-
-
 /*顶点数据 （位置 + 颜色）
- * 每个顶点由位置（3个float）和颜色（3个float）组成
- * stride：每个顶点的步长，即从一个顶点的位置数据开始，到下一个顶点的位置数据的字节偏移量。每个顶点占用6个float， stride = 6 * sizeof(float) = 24
+ * 每个顶点由位置（3个float）和颜色（3个float）组成和纹理坐标（2个float）
+ * stride：每个顶点的步长，即从一个顶点的位置数据开始，到下一个顶点的位置数据的字节偏移量。每个顶点占用8个float， stride = 6 * sizeof(float) = 32
  * offset：每个顶点的颜色数据在顶点数组中的字节偏移量。颜色数据紧跟在位置数据后面，offset = 0（位置） + 3 * sizeof(float)（颜色） = 12
 */
-constexpr float vertices[] =
-{
-    -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // 左下
-     0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // 右下
-     0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f  // 顶部
+constexpr float vertices[] = {
+    // 位置（3个float）   //颜色（3个float）  // 纹理坐标（2个float）
+    -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 左下
+     0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // 右下
+     0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.5f, 1.0f  // 顶部
 };
+
 
 /**
  * 矩形数据 （位置 + 颜色 + 纹理坐标）
@@ -43,16 +41,6 @@ constexpr float rect[] =
      0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // 顶部
     -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // 左上
 };
-
-// uv范围 0.0-2.0。可修改纹理包裹模式
-// constexpr float rect[] =
-// {
-//     // 位置（3个float）   //颜色（3个float）  // 纹理坐标（2个float）
-//     -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 左下
-//      0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 2.0f, 0.0f, // 右下
-//      0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 2.0f, 2.0f, // 顶部
-//     -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 2.0f  // 左上
-// };
 
 const unsigned int indices[] =
 {
@@ -102,26 +90,37 @@ void PrepareTriangleData()
      * @param index: 顶点属性索引，对应vertex shader中的layout(location = index)
      */
     CHECK_GL_ERROR(glEnableVertexAttribArray(0));
-    /* 设置顶点属性指针，索引为0，属性为3个float，步长为24个字节，偏移量为0个字节
+    /* 设置顶点属性指针，索引为0，属性为3个float，步长为32个字节，偏移量为0个字节
      * @param index: 顶点属性索引，对应vertex shader中的layout(location = index)
      * @param size: 每个顶点属性的组件数量，这里是3个float，即vec3
      * @param type: 数据类型，这里是GL_FLOAT，每个组件占用4个字节
      * @param normalized: 是否归一化，这里是GL_FALSE
-     * @param stride: 每个顶点的步长，即从一个顶点的位置数据开始，到下一个顶点的位置数据的字节偏移量。每个顶点占用6个float， stride = 6 * sizeof(float) = 24
+     * @param stride: 每个顶点的步长，即从一个顶点的位置数据开始，到下一个顶点的位置数据的字节偏移量。每个顶点占用8个float， stride = 8 * sizeof(float) = 32
      * @param offset: 每个顶点的位置数据在顶点数组中的字节偏移量。位置数据在顶点数组的开头，offset = 0
      */
-    CHECK_GL_ERROR(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, reinterpret_cast<void *>(0)));
+    CHECK_GL_ERROR(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, reinterpret_cast<void *>(0)));
     // 启用顶点属性数组，索引为1：color, 在vertex shader中layout(location = 1)指定
     CHECK_GL_ERROR(glEnableVertexAttribArray(1));
-    /* 设置顶点属性指针，索引为1，属性为3个float，步长为24个字节，偏移量为12个字节
+    /* 设置顶点属性指针，索引为1，属性为3个float，步长为32个字节，偏移量为12个字节
      * @param index: 顶点属性索引，对应vertex shader中的layout(location = index)
      * @param size: 每个顶点属性的组件数量，这里是3个float，即vec3
      * @param type: 数据类型，这里是GL_FLOAT，每个组件占用4个字节
      * @param normalized: 是否归一化，这里是GL_FALSE
-     * @param stride: 每个顶点的步长，即从一个顶点的颜色数据开始，到下一个顶点的颜色数据的字节偏移量。每个顶点占用6个float， stride = 6 * sizeof(float) = 24
+     * @param stride: 每个顶点的步长，即从一个顶点的颜色数据开始，到下一个顶点的颜色数据的字节偏移量。每个顶点占用8个float， stride = 8 * sizeof(float) = 32
      * @param offset: 每个顶点的颜色数据在顶点数组中的字节偏移量。颜色数据在顶点数组的第3个float开始，offset = sizeof(float) * 3
      */
-    CHECK_GL_ERROR(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, reinterpret_cast<void *>(sizeof(float) * 3)));
+    CHECK_GL_ERROR(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, reinterpret_cast<void *>(sizeof(float) * 3)));
+    // 启用顶点属性数组，索引为2：texCoord, 在vertex shader中layout(location = 2)指定
+    CHECK_GL_ERROR(glEnableVertexAttribArray(2));
+    /* 设置顶点属性指针，索引为2，属性为2个float，步长为24个字节，偏移量为24个字节
+     * @param index: 顶点属性索引，对应vertex shader中的layout(location = index)
+     * @param size: 每个顶点属性的组件数量，这里是2个float，即vec2
+     * @param type: 数据类型，这里是GL_FLOAT，每个组件占用4个字节
+     * @param normalized: 是否归一化，这里是GL_FALSE
+     * @param stride: 每个顶点的步长，即从一个顶点的纹理坐标数据开始，到下一个顶点的纹理坐标数据的字节偏移量。每个顶点占用8个float， stride = 8 * sizeof(float) = 32
+     * @param offset: 每个顶点的纹理坐标数据在顶点数组中的字节偏移量。纹理坐标数据在顶点数组的第6个float开始，offset = sizeof(float) * 6
+     */
+    CHECK_GL_ERROR(glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8, reinterpret_cast<void *>(sizeof(float) * 6)));
 
     // 解绑VAO, VBO, EBO
     /* 解绑VAO到当前OpenGL状态机的当前VAO插槽
@@ -235,21 +234,22 @@ void PrepareRectangleData()
     // 注意：不要在这里解绑EBO，解绑这会导致VAO记录一个无效的EBO绑定（0）, 后续绘制时会使用默认的EBO（0）, 导致绘制错误
 }
 
-glm::mat4x4 modelMat = glm::mat4x4(1.0f);
-void DoTransform()
+glm::mat4x4 triangleModelMat = glm::mat4x4(1.0f);
+glm::mat4x4 rectangleModelMat = glm::mat4x4(1.0f);
+void TriangleTransform()
 {
     /* 平移变换
      * @param transMat: 平移变换矩阵
      * @param transVec: 平移向量，这里是(0.5f, -0.5f, 0.0f)
      */
-    glm::mat4x4 transMat = glm::mat4x4(1.0f);
-    transMat = glm::translate(transMat, glm::vec3(0.5f, -0.5f, 0.0f));
+    auto transMat = glm::mat4x4(1.0f);
+    transMat = glm::translate(transMat, glm::vec3(0.5f, 0.5f, 0.1f));
 
     /* 缩放变换
      * @param scaleMat: 缩放变换矩阵
      * @param scaleVec: 缩放向量，这里是(0.5f, 0.5f, 1.0f)
      */
-    glm::mat4x4 scaleMat = glm::mat4x4(1.0f);
+    auto scaleMat = glm::mat4x4(1.0f);
     scaleMat = glm::scale(scaleMat, glm::vec3(0.5f, 0.5f, 1.0f));
 
     /* 旋转变换
@@ -257,24 +257,23 @@ void DoTransform()
      * @param angle: 旋转角度，这里是glfwGetTime()，即当前时间，单位为秒
      * @param axis: 旋转轴，这里是(0.0f, 0.0f, 1.0f)，即绕Z轴旋转
      */
-    glm::mat4x4 rotateMat = glm::mat4x4(1.0f);
+    auto rotateMat = glm::mat4x4(1.0f);
     rotateMat = glm::rotate(rotateMat, static_cast<float>(glfwGetTime()), glm::vec3(0.0f, 0.0f, 1.0f));
 
     // 变换矩阵
-    modelMat = rotateMat;
+    triangleModelMat = transMat;
 }
 
 Camera* camera = nullptr;
 CameraControl* cameraControl = nullptr;
 void PrepareCamera()
 {
-    // 相机
-    camera = new PerspectiveCamera(90.0f, static_cast<float>(APP->GetWindowWidth()) / static_cast<float>(APP->GetWindowHeight()), 0.01f, 100.0f);
+    camera = new PerspectiveCamera(60.0f, static_cast<float>(APP->GetWindowWidth()) / static_cast<float>(APP->GetWindowHeight()), 0.01f, 100.0f);
     // camera = new OrthographicCamera(-1.0f, 1.0f, -1.0f, 1.0f, 0.01f, 100.0f);
-    cameraControl = new GameCameraControl();
-    // cameraControl = new TrackBallCameraControl();
+    cameraControl = new TrackBallCameraControl();
+    // cameraControl = new GameCameraControl();
     cameraControl->SetCamera(camera);
-    cameraControl->SetSensitivity(0.2f);
+    cameraControl->SetSensitivity(0.1f);
 }
 
 // 事件操作
@@ -354,32 +353,38 @@ void OnScrollEvent(double xoffset, double yoffset)
     cameraControl->OnScroll(xoffset, yoffset);
 }
 
+void PrepareState()
+{
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+}
+
 // 渲染
-Shader* shader = nullptr;
-Texture* texture = nullptr;
+std::unique_ptr<Shader> shaderTriangle;
+std::unique_ptr<Shader> shaderRectangle;
+std::unique_ptr<Texture> textureTriangle;
+std::unique_ptr<Texture> textureRectangle;
 void Render()
 {
     /* 清除颜色缓冲区，将颜色缓冲区的颜色设置为指定的颜色值
      * @param mask: 要清除的缓冲区位掩码，这里是GL_COLOR_BUFFER_BIT，即颜色缓冲区
      */
-    CHECK_GL_ERROR(glClear(GL_COLOR_BUFFER_BIT));
+    CHECK_GL_ERROR(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
     // shader
-    shader->UseShaderProgram();
-    shader->SetFloatUniform("uTime", static_cast<float>(glfwGetTime())); // glfwGetTime()返回当前时间，单位为秒
-    shader->SetIntUniform("uColorTexture", 0);
-    shader->SetVec4Uniform("uColor", glm::vec4(0.7f, 0.1f, 0.3f, 1.0f));
-    shader->SetMat4x4Uniform("uModelMatrix", modelMat);
-    shader->SetMat4x4Uniform("uViewMatrix", camera->GetViewMatrix());
-    shader->SetMat4x4Uniform("uProjectionMatrix", camera->GetProjectionMatrix());
-
-
+    shaderTriangle->UseShaderProgram();
+    // shader->SetFloatUniform("uTime", static_cast<float>(glfwGetTime())); // glfwGetTime()返回当前时间，单位为秒
+    shaderTriangle->SetIntUniform("uColorTexture", 0);
+    shaderTriangle->SetVec4Uniform("uColor", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+    shaderTriangle->SetMat4x4Uniform("uModelMatrix", triangleModelMat);
+    shaderTriangle->SetMat4x4Uniform("uViewMatrix", camera->GetViewMatrix());
+    shaderTriangle->SetMat4x4Uniform("uProjectionMatrix", camera->GetProjectionMatrix());
 
     // 绘制三角形
     /* 绑定VAO，将指定的VAO绑定到当前OpenGL状态机，后续的顶点属性配置和索引绘制操作将使用该VAO的状态
      * @param vao: 要绑定的VAO ID，这里是triangleVAO
      */
-    // CHECK_GL_ERROR(glBindVertexArray(triangleVAO));
+    CHECK_GL_ERROR(glBindVertexArray(triangleVAO));
     /* 绘制三角形，使用顶点缓冲区绘制三角形图元
      * @Param mode： 要绘制的图元类型
          * GL_POINTS：每个顶点单独画一个点
@@ -391,9 +396,16 @@ void Render()
      * @Param first： 要绘制的第一个顶点索引
      * @Param count： 要绘制的顶点数量
      */
-    // CHECK_GL_ERROR(glDrawArrays(GL_TRIANGLES, 0, 3));
+    CHECK_GL_ERROR(glDrawArrays(GL_TRIANGLES, 0, 3));
 
     // 绘制矩形
+    shaderRectangle->UseShaderProgram();
+    shaderRectangle->SetVec4Uniform("uColor", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    shaderRectangle->SetMat4x4Uniform("uModelMatrix", rectangleModelMat);
+    shaderRectangle->SetIntUniform("uColorTexture", 1);
+    shaderRectangle->SetMat4x4Uniform("uViewMatrix", camera->GetViewMatrix());
+    shaderRectangle->SetMat4x4Uniform("uProjectionMatrix", camera->GetProjectionMatrix());
+
     /* 绑定VAO，将指定的VAO绑定到当前OpenGL状态机，后续的顶点属性配置和索引绘制操作将使用该VAO的状态
      * @param vao: 要绑定的VAO ID，这里是rectangleVAO
      */
@@ -409,7 +421,8 @@ void Render()
      */
     CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
 
-    shader->EndShaderProgram();
+    shaderTriangle->EndShaderProgram();
+    shaderRectangle->EndShaderProgram();
 }
 
 bool CreateWindow()
@@ -420,6 +433,10 @@ bool CreateWindow()
         std::cerr << "Failed to initialize GLFW window" << std::endl;
         return false;
     }
+    // 设置视口大小及清除颜色
+    CHECK_GL_ERROR(glViewport(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT));
+    CHECK_GL_ERROR(glClearColor(0.1f, 0.1f, 0.2f, 1.0f));
+
     // 事件响应：窗口大小改变
     APP->SetResizeCallback(OnWindowResizeEvent);
     APP->SetKeyCallback(OnKeyEvent);
@@ -428,46 +445,40 @@ bool CreateWindow()
     APP->SetCursorCallback(OnCursorEvent);
     APP->SetScrollCallback(OnScrollEvent);
 
-    // 始化shader对象
-    shader = new Shader();
-    shader->LoadCompileShader(ASSET_DIR "Shader/Vertex.vert", ASSET_DIR "Shader/Fragment.frag");
-    // 初始化纹理对象
-    texture = new Texture();
-    texture->LoadTexture(ASSET_DIR "Texture/Bird.png", 0);
-
-    // 设置视口大小及清除颜色
-    CHECK_GL_ERROR(glViewport(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT));
-    CHECK_GL_ERROR(glClearColor(0.1f, 0.1f, 0.2f, 1.0f));
-
+    // 准备三角形数据
+    PrepareTriangleData();
+    // 变换三角形
+    TriangleTransform();
     // 准备四边形数据
     PrepareRectangleData();
     // 准备相机
     PrepareCamera();
+    // 准备渲染状态
+    PrepareState();
+
+    // 初始化三角形shader对象、纹理对象
+    shaderTriangle = std::make_unique<Shader>();
+    shaderTriangle->LoadCompileShader(ASSET_DIR "Shader/Vertex.vert", ASSET_DIR "Shader/Fragment.frag");
+    textureTriangle = std::make_unique<Texture>();
+    textureTriangle->LoadTexture(ASSET_DIR "Texture/Grid.png", 0);
+
+    // 初始化四边形shader对象、纹理对象
+    shaderRectangle = std::make_unique<Shader>();
+    shaderRectangle->LoadCompileShader(ASSET_DIR "Shader/Vertex.vert", ASSET_DIR "Shader/Fragment.frag");
+    textureRectangle = std::make_unique<Texture>();
+    textureRectangle->LoadTexture(ASSET_DIR "Texture/Bird.png", 1);
 
     // 执行渲染循环
     while (APP->WindowUpdate())
     {
-        // 变换矩阵
-        // DoTransform();
         // 更新相机变换矩阵
         cameraControl->Update();
         // 渲染
         Render();
     }
+
     // 销毁窗口
     APP->WindowDestroy();
-
-    if (shader)
-    {
-        delete shader;
-        shader = nullptr;
-    }
-
-    if (texture)
-    {
-        delete texture;
-        texture = nullptr;
-    }
 
     return true;
 }
