@@ -50,6 +50,8 @@ add_executable(${PROJECT_NAME} ${SOURCES}
         Include/Application/Camera/TrackBallCameraControl.h
         Src/Application/Camera/GameCameraControl.cpp
         Include/Application/Camera/GameCameraControl.h
+        Src/Framework/Geometry.cpp
+        Include/Framework/Geometry.h
 )
 
 # 链接库

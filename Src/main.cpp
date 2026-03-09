@@ -1,7 +1,8 @@
 #include "Core.h"
-#include "Application/Texture.h"
 #include "Application/Application.h"
 #include "Framework/Shader.h"
+#include "Application/Texture.h"
+#include "Framework/Geometry.h"
 #include "Application/Camera/PerspectiveCamera.h"
 #include "Application/Camera/OrthographicCamera.h"
 #include "Application/Camera/TrackBallCameraControl.h"
@@ -11,11 +12,10 @@
 #define MAJOR_VERSION 4 // OpenGL主版本号
 #define MINOR_VERSION 6 // OpenGL次版本号
 #define WINDOW_WIDTH 800  // 窗口宽度
-#define WINDOW_HEIGHT 600 // 窗口高度
+#define WINDOW_HEIGHT 800 // 窗口高度
 #define WINDOW_TITLE "GLRenderer Window"  // 窗口标题
 #define VIEWPORT_WIDTH 800  // 视口宽度
-#define VIEWPORT_HEIGHT 600 // 视口高度
-
+#define VIEWPORT_HEIGHT 800 // 视口高度
 
 /*顶点数据 （位置 + 颜色）
  * 每个顶点由位置（3个float）和颜色（3个float）组成和纹理坐标（2个float）
@@ -29,26 +29,6 @@ constexpr float vertices[] = {
      0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.5f, 1.0f  // 顶部
 };
 
-
-/**
- * 矩形数据 （位置 + 颜色 + 纹理坐标）
- * 每个顶点由位置（3个float）、颜色（3个float）和纹理坐标（2个float）组成
-*/
-constexpr float rect[] =
-{
-    -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 左下
-     0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // 右下
-     0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // 顶部
-    -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // 左上
-};
-
-const unsigned int indices[] =
-{
-    0, 1, 2, // 第一个三角形
-    2, 3, 0 // 第二个三角形
-};
-
-// 准备VAO, VBO
 GLuint triangleVAO = 0;
 void PrepareTriangleData()
 {
@@ -132,6 +112,24 @@ void PrepareTriangleData()
      */
     CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
+
+/**
+ * 矩形数据 （位置 + 颜色 + 纹理坐标）
+ * 每个顶点由位置（3个float）、颜色（3个float）和纹理坐标（2个float）组成
+*/
+constexpr float rect[] =
+{
+    -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 左下
+     0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // 右下
+     0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // 顶部
+    -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // 左上
+};
+
+const unsigned int indices[] =
+{
+    0, 1, 2, // 第一个三角形
+    2, 3, 0 // 第二个三角形
+};
 
 GLuint rectangleVAO = 0;
 void PrepareRectangleData()
@@ -234,8 +232,19 @@ void PrepareRectangleData()
     // 注意：不要在这里解绑EBO，解绑这会导致VAO记录一个无效的EBO绑定（0）, 后续绘制时会使用默认的EBO（0）, 导致绘制错误
 }
 
+std::unique_ptr<Geometry> cube = nullptr;
+void PrepareCubeData()
+{
+    cube = Geometry::CreateBox(0.5f, 0.5f, 0.5f);
+}
+
+std::unique_ptr<Geometry> sphere = nullptr;
+void PrepareSphereData()
+{
+    sphere = Geometry::CreateSphere(0.3f);
+}
+
 glm::mat4x4 triangleModelMat = glm::mat4x4(1.0f);
-glm::mat4x4 rectangleModelMat = glm::mat4x4(1.0f);
 void TriangleTransform()
 {
     /* 平移变换
@@ -264,16 +273,68 @@ void TriangleTransform()
     triangleModelMat = transMat;
 }
 
+glm::mat4x4 rectangleModelMat = glm::mat4x4(1.0f);
+void RectangleTransform()
+{
+    /* 平移变换
+     * @param transMat: 平移变换矩阵
+     * @param transVec: 平移向量，这里是(-0.5f, 0.5f, 0.0f)
+     */
+    auto transMat = glm::mat4x4(1.0f);
+    transMat = glm::translate(transMat, glm::vec3(-0.5f, 0.5f, 0.1f));
+
+    /* 缩放变换
+     * @param scaleMat: 缩放变换矩阵
+     * @param scaleVec: 缩放向量，这里是(0.5f, 0.5f, 1.0f)
+     */
+    auto scaleMat = glm::mat4x4(1.0f);
+    scaleMat = glm::scale(scaleMat, glm::vec3(0.5f, 0.5f, 1.0f));
+
+    // 变换矩阵
+    rectangleModelMat =  glm::mat4x4(1.0f);
+}
+
+glm::mat4x4 cubeModelMat = glm::mat4x4(1.0f);
+void CubeTransform()
+{
+    /* 平移变换
+     * @param transMat: 平移变换矩阵
+     * @param transVec: 平移向量，这里是(-0.5f, -0.5f, 0.0f)
+     */
+    auto transMat = glm::mat4x4(1.0f);
+    transMat = glm::translate(transMat, glm::vec3(-0.5f, -0.3f, 0.5f));
+
+    // 变换矩阵
+    cubeModelMat = transMat;
+}
+
+glm::mat4x4 sphereModelMat = glm::mat4x4(1.0f);
+void SphereTransform()
+{
+    auto transMat = glm::mat4x4(1.0f);
+    transMat = glm::translate(transMat, glm::vec3(0.0f, 0.8f, -0.5f));
+    sphereModelMat = transMat;
+}
+
 Camera* camera = nullptr;
 CameraControl* cameraControl = nullptr;
 void PrepareCamera()
 {
-    camera = new PerspectiveCamera(60.0f, static_cast<float>(APP->GetWindowWidth()) / static_cast<float>(APP->GetWindowHeight()), 0.01f, 100.0f);
+    camera = new PerspectiveCamera(60.0f, static_cast<float>(APP->GetWindowWidth()) / static_cast<float>(APP->GetWindowHeight()), 0.001f, 100.0f);
     // camera = new OrthographicCamera(-1.0f, 1.0f, -1.0f, 1.0f, 0.01f, 100.0f);
     cameraControl = new TrackBallCameraControl();
     // cameraControl = new GameCameraControl();
     cameraControl->SetCamera(camera);
     cameraControl->SetSensitivity(0.1f);
+}
+
+void PrepareState()
+{
+    glEnable(GL_DEPTH_TEST); // 启用深度测试
+    glDepthFunc(GL_LESS); // 设置深度测试函数为小于等于
+    // glEnable(GL_CULL_FACE); // 启用背面剔除
+    // glCullFace(GL_BACK); // 剔除背面
+    // glFrontFace(GL_CCW); // 设置逆时针为正面
 }
 
 // 事件操作
@@ -353,32 +414,20 @@ void OnScrollEvent(double xoffset, double yoffset)
     cameraControl->OnScroll(xoffset, yoffset);
 }
 
-void PrepareState()
-{
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-}
 
 // 渲染
 std::unique_ptr<Shader> shaderTriangle;
-std::unique_ptr<Shader> shaderRectangle;
 std::unique_ptr<Texture> textureTriangle;
-std::unique_ptr<Texture> textureRectangle;
-void Render()
+void RenderTriangle()
 {
-    /* 清除颜色缓冲区，将颜色缓冲区的颜色设置为指定的颜色值
-     * @param mask: 要清除的缓冲区位掩码，这里是GL_COLOR_BUFFER_BIT，即颜色缓冲区
-     */
-    CHECK_GL_ERROR(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-
     // shader
     shaderTriangle->UseShaderProgram();
     // shader->SetFloatUniform("uTime", static_cast<float>(glfwGetTime())); // glfwGetTime()返回当前时间，单位为秒
-    shaderTriangle->SetIntUniform("uColorTexture", 0);
-    shaderTriangle->SetVec4Uniform("uColor", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
     shaderTriangle->SetMat4x4Uniform("uModelMatrix", triangleModelMat);
     shaderTriangle->SetMat4x4Uniform("uViewMatrix", camera->GetViewMatrix());
     shaderTriangle->SetMat4x4Uniform("uProjectionMatrix", camera->GetProjectionMatrix());
+    shaderTriangle->SetVec4Uniform("uColor", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+    shaderTriangle->SetIntUniform("uColorTexture", 0);
 
     // 绘制三角形
     /* 绑定VAO，将指定的VAO绑定到当前OpenGL状态机，后续的顶点属性配置和索引绘制操作将使用该VAO的状态
@@ -398,13 +447,20 @@ void Render()
      */
     CHECK_GL_ERROR(glDrawArrays(GL_TRIANGLES, 0, 3));
 
+    shaderTriangle->EndShaderProgram();
+}
+
+std::unique_ptr<Shader> shaderRectangle;
+std::unique_ptr<Texture> textureRectangle;
+void RenderRectangle()
+{
     // 绘制矩形
     shaderRectangle->UseShaderProgram();
-    shaderRectangle->SetVec4Uniform("uColor", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
     shaderRectangle->SetMat4x4Uniform("uModelMatrix", rectangleModelMat);
-    shaderRectangle->SetIntUniform("uColorTexture", 1);
     shaderRectangle->SetMat4x4Uniform("uViewMatrix", camera->GetViewMatrix());
     shaderRectangle->SetMat4x4Uniform("uProjectionMatrix", camera->GetProjectionMatrix());
+    shaderRectangle->SetVec4Uniform("uColor", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    shaderRectangle->SetIntUniform("uColorTexture", 1);
 
     /* 绑定VAO，将指定的VAO绑定到当前OpenGL状态机，后续的顶点属性配置和索引绘制操作将使用该VAO的状态
      * @param vao: 要绑定的VAO ID，这里是rectangleVAO
@@ -420,9 +476,43 @@ void Render()
         * 如果没有使用EBO（VAO没有绑定EBO），可以直接将CPU端的索引数据指针（indices）作为参数传递*
      */
     CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
-
-    shaderTriangle->EndShaderProgram();
     shaderRectangle->EndShaderProgram();
+}
+
+std::unique_ptr<Shader> shaderBox;
+std::unique_ptr<Texture> textureBox;
+void RenderCube()
+{
+    // 绘制立方体
+    shaderBox->UseShaderProgram();
+    shaderBox->SetMat4x4Uniform("uModelMatrix", cubeModelMat);
+    shaderBox->SetMat4x4Uniform("uViewMatrix", camera->GetViewMatrix());
+    shaderBox->SetMat4x4Uniform("uProjectionMatrix", camera->GetProjectionMatrix());
+    shaderBox->SetVec4Uniform("uColor", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    shaderBox->SetIntUniform("uColorTexture", 2);
+
+    // 绘制立方体
+    CHECK_GL_ERROR(glBindVertexArray(cube->GetVAO()));
+    CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, cube->GetIndices(), GL_UNSIGNED_INT, nullptr));
+
+    shaderBox->EndShaderProgram();
+}
+
+std::unique_ptr<Shader> shaderSphere;
+std::unique_ptr<Texture> textureSphere;
+void RenderSphere()
+{
+    shaderSphere->UseShaderProgram();
+    shaderSphere->SetMat4x4Uniform("uModelMatrix", sphereModelMat);
+    shaderSphere->SetMat4x4Uniform("uViewMatrix", camera->GetViewMatrix());
+    shaderSphere->SetMat4x4Uniform("uProjectionMatrix", camera->GetProjectionMatrix());
+    shaderSphere->SetVec4Uniform("uColor", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    shaderSphere->SetIntUniform("uColorTexture", 3);
+
+    CHECK_GL_ERROR(glBindVertexArray(sphere->GetVAO()));
+    CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, sphere->GetIndices(), GL_UNSIGNED_INT, nullptr));
+
+    shaderSphere->EndShaderProgram();
 }
 
 bool CreateWindow()
@@ -449,8 +539,18 @@ bool CreateWindow()
     PrepareTriangleData();
     // 变换三角形
     TriangleTransform();
+    // 变换矩形
+    RectangleTransform();
+    // 变换立方体
+    CubeTransform();
+    // 变换球体
+    SphereTransform();
     // 准备四边形数据
     PrepareRectangleData();
+    // 准备立方体数据
+    PrepareCubeData();
+    // 准备球体数据
+    PrepareSphereData();
     // 准备相机
     PrepareCamera();
     // 准备渲染状态
@@ -468,13 +568,34 @@ bool CreateWindow()
     textureRectangle = std::make_unique<Texture>();
     textureRectangle->LoadTexture(ASSET_DIR "Texture/Bird.png", 1);
 
+    // 初始化立方体shader对象、纹理对象
+    shaderBox = std::make_unique<Shader>();
+    shaderBox->LoadCompileShader(ASSET_DIR "Shader/Vertex.vert", ASSET_DIR "Shader/Fragment.frag");
+    textureBox = std::make_unique<Texture>();
+    textureBox->LoadTexture(ASSET_DIR "Texture/Grid.png", 2);
+
+    // 初始化球体shader对象、纹理对象
+    shaderSphere = std::make_unique<Shader>();
+    shaderSphere->LoadCompileShader(ASSET_DIR "Shader/Vertex.vert", ASSET_DIR "Shader/Fragment.frag");
+    textureSphere = std::make_unique<Texture>();
+    textureSphere->LoadTexture(ASSET_DIR "Texture/Walkway.png", 3);
+
     // 执行渲染循环
     while (APP->WindowUpdate())
     {
         // 更新相机变换矩阵
         cameraControl->Update();
+
+        /* 清除颜色缓冲区，将颜色缓冲区的颜色设置为指定的颜色值
+        * @param mask: 要清除的缓冲区位掩码，这里是GL_COLOR_BUFFER_BIT，即颜色缓冲区
+        */
+        CHECK_GL_ERROR(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+
         // 渲染
-        Render();
+        RenderTriangle();
+        RenderRectangle();
+        RenderCube();
+        RenderSphere();
     }
 
     // 销毁窗口
