@@ -12,8 +12,8 @@ public:
     GLuint GetVAO() const;
     GLuint GetIndices() const;
 
-    static std::unique_ptr<Geometry> CreateBox(float length, float width, float height);
-    static std::unique_ptr<Geometry> CreateSphere(float radius);
+    static std::shared_ptr<Geometry> CreateCube(float length, float width, float height);
+    static std::shared_ptr<Geometry> CreateSphere(float radius);
 
 private:
     GLuint mVAO = 0; // 顶点数组对象 Vertex Array Object

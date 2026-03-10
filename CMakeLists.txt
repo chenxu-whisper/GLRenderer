@@ -52,6 +52,9 @@ add_executable(${PROJECT_NAME} ${SOURCES}
         Include/Application/Camera/GameCameraControl.h
         Src/Framework/Geometry.cpp
         Include/Framework/Geometry.h
+        Src/Framework/ResourceManager.cpp
+        Include/Framework/ResourceManager.h
+        Include/Framework/ResourceManager.h
 )
 
 # 链接库

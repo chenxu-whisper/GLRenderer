@@ -3,15 +3,27 @@
 ---
 
 ### 项目结构：
-* **[Src](https://github.com/chenxu-whisper/GLRenderer/tree/main/src)**：项目源代码目录，包含所有OpenGL相关的代码。
-* **[ThirdParty](https://github.com/chenxu-whisper/GLRenderer/tree/main/thirdParty)**：第三方库目录，包含项目依赖的外部库。
-* **[Doc](https://github.com/chenxu-whisper/GLRenderer/tree/main/doc)**：项目文档目录，包含一些笔记。
-  * [LearnOpenGL](Doc/LearnOpenGL.md)
-  * [Algorithms](Doc/Algorithms.md)
-  * [Mathematics](Doc/Mathematics.md)
-  * [Mipmap](Doc/Mipmap.md)
-* **[Asset](https://github.com/chenxu-whisper/GLRenderer/tree/main/asset)**：项目资源目录，包含一些模型、纹理等资源。
-
+```plaintext
+GLRenderer/
+├── Asset/            # 资源目录
+│   ├── Model/        # 3D模型文件
+│   ├── Shader/       # 着色器文件
+│   └── Texture/      # 纹理文件
+├── Doc/              # 文档目录
+│   ├── Screenshot/   # 截图
+│   └── *.md          # 文档文件
+├── Include/          # 头文件目录
+│   ├── Application/  # 应用程序相关
+│   ├── Framework/    # 框架核心
+│   └── Wrapper/      # 包装类
+├── Src/              # 源代码目录
+│   ├── Application/  # 应用程序实现
+│   ├── Framework/    # 框架实现
+│   └── Glad/         # GLAD库
+├── ThirdParty/       # 第三方库
+├── CMakeLists.txt    # CMake配置文件
+└── README.md         # 项目说明
+```
 ---
 
 ### 分支
@@ -54,7 +66,6 @@
   * 深度测试（Depth Testing）
     * 深度缓冲区（Depth Buffer）
     * 深度测试函数（Depth Test Function）
-  
 * **[intermediate](https://github.com/ByteDance/GLRenderer/tree/intermediate)**：中级分支，包括OpenGL中级知识：
 
 * **[advanced](https://github.com/ByteDance/GLRenderer/tree/advanced)**：高级分支，包括OpenGL高级知识：

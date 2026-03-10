@@ -21,6 +21,8 @@ class Application
 {
 public:
     ~Application();
+    // 友元声明，允许std::make_unique访问私有构造函数
+    friend std::unique_ptr<Application> std::make_unique<Application>();
     // 获取单例实例
     static Application* GetInstance();
     // 初始化窗口
@@ -88,7 +90,8 @@ private:
     // 构造函数设为私有，防止外部实例化
     Application();
     // 单例实例指针
-    static Application* mInstance;
+    static std::unique_ptr<Application> mInstance;
+    static std::mutex mInstanceMutex;
     // 窗口
     GLFWwindow* mWindow = nullptr;
     uint32_t mWidth = 0;

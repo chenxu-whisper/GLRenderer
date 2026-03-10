@@ -1,4 +1,4 @@
-#include "Texture.h"
+#include "Framework/Texture.h"
 
 Texture::Texture()
 {
@@ -99,3 +99,7 @@ void Texture::LoadTexture(const std::string& filePath, unsigned int textureUnit)
     // 释放图像数据内存
     stbi_image_free(imageData);
 }
+
+GLuint Texture::GetTextureID() const { return mTextureID; }
+
+unsigned int Texture::GetTextureUnit() const { return mTextureUnit; }

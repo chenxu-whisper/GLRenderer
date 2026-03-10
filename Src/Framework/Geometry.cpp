@@ -23,9 +23,9 @@ GLuint Geometry::GetVAO() const { return mVAO; }
 
 GLuint Geometry::GetIndices() const { return mIndices; }
 
-std::unique_ptr<Geometry> Geometry::CreateBox(float length, float width, float height)
+std::shared_ptr<Geometry> Geometry::CreateCube(float length, float width, float height)
 {
-    auto geometry = std::make_unique<Geometry>();
+    auto geometry = std::make_shared<Geometry>();
     geometry->mIndices = 36; // 6个面，每个面6个顶点
 
     // 位置
@@ -195,9 +195,9 @@ std::unique_ptr<Geometry> Geometry::CreateBox(float length, float width, float h
     return geometry;
 }
 
-std::unique_ptr<Geometry> Geometry::CreateSphere(float radius)
+std::shared_ptr<Geometry> Geometry::CreateSphere(float radius)
 {
-    auto geometry = std::make_unique<Geometry>();
+    auto geometry = std::make_shared<Geometry>();
 
     std::vector<GLfloat> positions; // 位置
     std::vector<GLfloat> colors; // 颜色
