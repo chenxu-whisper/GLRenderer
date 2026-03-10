@@ -12,6 +12,11 @@ public:
 
     void LoadTexture(const std::string& filePath, unsigned int textureUnit);
 
+    // 获取纹理ID
+    GLuint GetTextureID() const;
+    // 获取纹理单元
+    unsigned int GetTextureUnit() const;
+
 private:
     GLuint mTextureID = 0;
     unsigned int mTextureUnit = 0;

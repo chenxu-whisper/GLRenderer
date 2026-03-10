@@ -5,15 +5,19 @@ Application::Application() = default;
 
 Application::~Application() = default;
 
-Application* Application::mInstance = nullptr;
+std::unique_ptr<Application> Application::mInstance = nullptr;
+
+std::mutex Application::mInstanceMutex;
 
 // 获取单例实例
 Application* Application::GetInstance()
 {
-    if (mInstance == nullptr)
-        mInstance = new Application();
+    std::lock_guard<std::mutex> lock(mInstanceMutex);
 
-    return mInstance;
+    if (mInstance == nullptr)
+        mInstance = std::make_unique<Application>();
+
+    return mInstance.get();
 }
 
 bool Application::WindowInit(const uint8_t& major, const uint8_t& minor, const uint32_t& width, const uint32_t& height, const char *title)

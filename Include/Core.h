@@ -5,7 +5,9 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include <memory>
+#include <mutex>
 #include <sstream>
 #include <fstream>
 #include <assert.h>

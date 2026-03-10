@@ -1,8 +1,6 @@
 #include "Core.h"
 #include "Application/Application.h"
-#include "Framework/Shader.h"
-#include "Application/Texture.h"
-#include "Framework/Geometry.h"
+#include "Framework/ResourceManager.h"
 #include "Application/Camera/PerspectiveCamera.h"
 #include "Application/Camera/OrthographicCamera.h"
 #include "Application/Camera/TrackBallCameraControl.h"
@@ -11,11 +9,11 @@
 // 窗体参数
 #define MAJOR_VERSION 4 // OpenGL主版本号
 #define MINOR_VERSION 6 // OpenGL次版本号
-#define WINDOW_WIDTH 800  // 窗口宽度
-#define WINDOW_HEIGHT 800 // 窗口高度
+#define WINDOW_WIDTH 1000  // 窗口宽度
+#define WINDOW_HEIGHT 1000 // 窗口高度
 #define WINDOW_TITLE "GLRenderer Window"  // 窗口标题
-#define VIEWPORT_WIDTH 800  // 视口宽度
-#define VIEWPORT_HEIGHT 800 // 视口高度
+#define VIEWPORT_WIDTH 1000  // 视口宽度
+#define VIEWPORT_HEIGHT 1000 // 视口高度
 
 /*顶点数据 （位置 + 颜色）
  * 每个顶点由位置（3个float）和颜色（3个float）组成和纹理坐标（2个float）
@@ -232,13 +230,13 @@ void PrepareRectangleData()
     // 注意：不要在这里解绑EBO，解绑这会导致VAO记录一个无效的EBO绑定（0）, 后续绘制时会使用默认的EBO（0）, 导致绘制错误
 }
 
-std::unique_ptr<Geometry> cube = nullptr;
+std::shared_ptr<Geometry> cube = nullptr;
 void PrepareCubeData()
 {
-    cube = Geometry::CreateBox(0.5f, 0.5f, 0.5f);
+    cube = Geometry::CreateCube(0.5f, 0.5f, 0.5f);
 }
 
-std::unique_ptr<Geometry> sphere = nullptr;
+std::shared_ptr<Geometry> sphere = nullptr;
 void PrepareSphereData()
 {
     sphere = Geometry::CreateSphere(0.3f);
@@ -316,15 +314,15 @@ void SphereTransform()
     sphereModelMat = transMat;
 }
 
-Camera* camera = nullptr;
-CameraControl* cameraControl = nullptr;
+std::unique_ptr<Camera> camera = nullptr;
+std::unique_ptr<CameraControl> cameraControl = nullptr;
 void PrepareCamera()
 {
-    camera = new PerspectiveCamera(60.0f, static_cast<float>(APP->GetWindowWidth()) / static_cast<float>(APP->GetWindowHeight()), 0.001f, 100.0f);
-    // camera = new OrthographicCamera(-1.0f, 1.0f, -1.0f, 1.0f, 0.01f, 100.0f);
-    cameraControl = new TrackBallCameraControl();
-    // cameraControl = new GameCameraControl();
-    cameraControl->SetCamera(camera);
+    camera = std::make_unique<PerspectiveCamera>(60.0f, static_cast<float>(APP->GetWindowWidth()) / static_cast<float>(APP->GetWindowHeight()), 0.001f, 100.0f);
+    // camera = std::make_unique<OrthographicCamera>(-1.0f, 1.0f, -1.0f, 1.0f, 0.01f, 100.0f);
+    cameraControl = std::make_unique<TrackBallCameraControl>();
+    // cameraControl = std::make_unique<GameCameraControl>();
+    cameraControl->SetCamera(camera.get());
     cameraControl->SetSensitivity(0.1f);
 }
 
@@ -414,10 +412,9 @@ void OnScrollEvent(double xoffset, double yoffset)
     cameraControl->OnScroll(xoffset, yoffset);
 }
 
-
 // 渲染
-std::unique_ptr<Shader> shaderTriangle;
-std::unique_ptr<Texture> textureTriangle;
+std::shared_ptr<Shader> shaderTriangle;
+std::shared_ptr<Texture> textureTriangle;
 void RenderTriangle()
 {
     // shader
@@ -427,7 +424,11 @@ void RenderTriangle()
     shaderTriangle->SetMat4x4Uniform("uViewMatrix", camera->GetViewMatrix());
     shaderTriangle->SetMat4x4Uniform("uProjectionMatrix", camera->GetProjectionMatrix());
     shaderTriangle->SetVec4Uniform("uColor", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-    shaderTriangle->SetIntUniform("uColorTexture", 0);
+    shaderTriangle->SetIntUniform("uColorTexture", textureTriangle->GetTextureUnit());
+
+    // 激活纹理单元并绑定纹理
+    glActiveTexture(GL_TEXTURE0 + textureTriangle->GetTextureUnit());
+    glBindTexture(GL_TEXTURE_2D, textureTriangle->GetTextureID());
 
     // 绘制三角形
     /* 绑定VAO，将指定的VAO绑定到当前OpenGL状态机，后续的顶点属性配置和索引绘制操作将使用该VAO的状态
@@ -450,8 +451,8 @@ void RenderTriangle()
     shaderTriangle->EndShaderProgram();
 }
 
-std::unique_ptr<Shader> shaderRectangle;
-std::unique_ptr<Texture> textureRectangle;
+std::shared_ptr<Shader> shaderRectangle;
+std::shared_ptr<Texture> textureRectangle;
 void RenderRectangle()
 {
     // 绘制矩形
@@ -460,7 +461,11 @@ void RenderRectangle()
     shaderRectangle->SetMat4x4Uniform("uViewMatrix", camera->GetViewMatrix());
     shaderRectangle->SetMat4x4Uniform("uProjectionMatrix", camera->GetProjectionMatrix());
     shaderRectangle->SetVec4Uniform("uColor", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-    shaderRectangle->SetIntUniform("uColorTexture", 1);
+    shaderRectangle->SetIntUniform("uColorTexture", textureRectangle->GetTextureUnit());
+
+    // 激活纹理单元并绑定纹理
+    glActiveTexture(GL_TEXTURE0 + textureRectangle->GetTextureUnit());
+    glBindTexture(GL_TEXTURE_2D, textureRectangle->GetTextureID());
 
     /* 绑定VAO，将指定的VAO绑定到当前OpenGL状态机，后续的顶点属性配置和索引绘制操作将使用该VAO的状态
      * @param vao: 要绑定的VAO ID，这里是rectangleVAO
@@ -479,27 +484,31 @@ void RenderRectangle()
     shaderRectangle->EndShaderProgram();
 }
 
-std::unique_ptr<Shader> shaderBox;
-std::unique_ptr<Texture> textureBox;
+std::shared_ptr<Shader> shaderCube;
+std::shared_ptr<Texture> textureCube;
 void RenderCube()
 {
     // 绘制立方体
-    shaderBox->UseShaderProgram();
-    shaderBox->SetMat4x4Uniform("uModelMatrix", cubeModelMat);
-    shaderBox->SetMat4x4Uniform("uViewMatrix", camera->GetViewMatrix());
-    shaderBox->SetMat4x4Uniform("uProjectionMatrix", camera->GetProjectionMatrix());
-    shaderBox->SetVec4Uniform("uColor", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-    shaderBox->SetIntUniform("uColorTexture", 2);
+    shaderCube->UseShaderProgram();
+    shaderCube->SetMat4x4Uniform("uModelMatrix", cubeModelMat);
+    shaderCube->SetMat4x4Uniform("uViewMatrix", camera->GetViewMatrix());
+    shaderCube->SetMat4x4Uniform("uProjectionMatrix", camera->GetProjectionMatrix());
+    shaderCube->SetVec4Uniform("uColor", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    shaderCube->SetIntUniform("uColorTexture", textureCube->GetTextureUnit());
+
+    // 激活纹理单元并绑定纹理
+    glActiveTexture(GL_TEXTURE0 + textureCube->GetTextureUnit());
+    glBindTexture(GL_TEXTURE_2D, textureCube->GetTextureID());
 
     // 绘制立方体
     CHECK_GL_ERROR(glBindVertexArray(cube->GetVAO()));
     CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, cube->GetIndices(), GL_UNSIGNED_INT, nullptr));
 
-    shaderBox->EndShaderProgram();
+    shaderCube->EndShaderProgram();
 }
 
-std::unique_ptr<Shader> shaderSphere;
-std::unique_ptr<Texture> textureSphere;
+std::shared_ptr<Shader> shaderSphere;
+std::shared_ptr<Texture> textureSphere;
 void RenderSphere()
 {
     shaderSphere->UseShaderProgram();
@@ -507,7 +516,11 @@ void RenderSphere()
     shaderSphere->SetMat4x4Uniform("uViewMatrix", camera->GetViewMatrix());
     shaderSphere->SetMat4x4Uniform("uProjectionMatrix", camera->GetProjectionMatrix());
     shaderSphere->SetVec4Uniform("uColor", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-    shaderSphere->SetIntUniform("uColorTexture", 3);
+    shaderSphere->SetIntUniform("uColorTexture", textureSphere->GetTextureUnit());
+
+    // 激活纹理单元并绑定纹理
+    glActiveTexture(GL_TEXTURE0 + textureSphere->GetTextureUnit());
+    glBindTexture(GL_TEXTURE_2D, textureSphere->GetTextureID());
 
     CHECK_GL_ERROR(glBindVertexArray(sphere->GetVAO()));
     CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, sphere->GetIndices(), GL_UNSIGNED_INT, nullptr));
@@ -557,28 +570,20 @@ bool CreateWindow()
     PrepareState();
 
     // 初始化三角形shader对象、纹理对象
-    shaderTriangle = std::make_unique<Shader>();
-    shaderTriangle->LoadCompileShader(ASSET_DIR "Shader/Vertex.vert", ASSET_DIR "Shader/Fragment.frag");
-    textureTriangle = std::make_unique<Texture>();
-    textureTriangle->LoadTexture(ASSET_DIR "Texture/Grid.png", 0);
+    shaderTriangle = RESOURCE_MANAGER->GetShader(ASSET_DIR "Shader/Vertex.vert", ASSET_DIR "Shader/Fragment.frag");
+    textureTriangle = RESOURCE_MANAGER->GetTexture(ASSET_DIR "Texture/Grid.png", 0);
 
     // 初始化四边形shader对象、纹理对象
-    shaderRectangle = std::make_unique<Shader>();
-    shaderRectangle->LoadCompileShader(ASSET_DIR "Shader/Vertex.vert", ASSET_DIR "Shader/Fragment.frag");
-    textureRectangle = std::make_unique<Texture>();
-    textureRectangle->LoadTexture(ASSET_DIR "Texture/Bird.png", 1);
+    shaderRectangle = RESOURCE_MANAGER->GetShader(ASSET_DIR "Shader/Vertex.vert", ASSET_DIR "Shader/Fragment.frag");
+    textureRectangle = RESOURCE_MANAGER->GetTexture(ASSET_DIR "Texture/Bird.png", 1);
 
     // 初始化立方体shader对象、纹理对象
-    shaderBox = std::make_unique<Shader>();
-    shaderBox->LoadCompileShader(ASSET_DIR "Shader/Vertex.vert", ASSET_DIR "Shader/Fragment.frag");
-    textureBox = std::make_unique<Texture>();
-    textureBox->LoadTexture(ASSET_DIR "Texture/Grid.png", 2);
+    shaderCube = RESOURCE_MANAGER->GetShader(ASSET_DIR "Shader/Vertex.vert", ASSET_DIR "Shader/Fragment.frag");
+    textureCube = RESOURCE_MANAGER->GetTexture(ASSET_DIR "Texture/Grid.png", 2);
 
     // 初始化球体shader对象、纹理对象
-    shaderSphere = std::make_unique<Shader>();
-    shaderSphere->LoadCompileShader(ASSET_DIR "Shader/Vertex.vert", ASSET_DIR "Shader/Fragment.frag");
-    textureSphere = std::make_unique<Texture>();
-    textureSphere->LoadTexture(ASSET_DIR "Texture/Walkway.png", 3);
+    shaderSphere = RESOURCE_MANAGER->GetShader(ASSET_DIR "Shader/Vertex.vert", ASSET_DIR "Shader/Fragment.frag");
+    textureSphere = RESOURCE_MANAGER->GetTexture(ASSET_DIR "Texture/Walkway.png", 3);
 
     // 执行渲染循环
     while (APP->WindowUpdate())
