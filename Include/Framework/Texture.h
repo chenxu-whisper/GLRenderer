@@ -10,18 +10,44 @@ public:
     Texture();
     ~Texture();
 
+    /*
+     * @brief 加载纹理对象
+     * @param filePath: 纹理文件路径
+     * @param textureUnit: 要绑定的纹理单元，这里是textureTriangle->GetTextureUnit()
+     */
     void LoadTexture(const std::string& filePath, unsigned int textureUnit);
 
-    // 获取纹理ID
+    /*
+     * @brief 获取纹理对象的ID
+     * @return 纹理对象的ID
+     */
     GLuint GetTextureID() const;
-    // 获取纹理单元
+    /*
+     * @brief 获取纹理对象的绑定纹理单元
+     * @return 纹理对象的绑定纹理单元
+     */
     unsigned int GetTextureUnit() const;
 
 private:
+    /*
+     * @brief 纹理对象的ID
+     */
     GLuint mTextureID = 0;
+    /*
+     * @brief 纹理对象的绑定纹理单元
+     */
     unsigned int mTextureUnit = 0;
+    /*
+     * @brief 纹理对象的宽度
+     */
     int mWidth = 0;
+    /*
+     * @brief 纹理对象的高度
+     */
     int mHeight = 0;
+    /*
+     * @brief 纹理对象的通道数
+     */
     int mChannels = 0;
 };
 

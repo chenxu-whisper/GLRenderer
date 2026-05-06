@@ -1,4 +1,4 @@
-#ifndef APPLICATON_H
+#ifndef APPLICATION_H
 #define APPLICATION_H
 
 #include "Core.h"
@@ -16,35 +16,39 @@ using MouseButtonCallback = void(*)(int button, int action, int mods); // 鼠标
 using MouseMoveCallback = void(*)(double xpos, double ypos); // 鼠标移动回调函数
 using MouseScrollCallback = void(*)(double xoffset, double yoffset); // 鼠标滚轮回调函数
 
-// 单例模式
+/**
+ * @brief 应用程序类，单例模式确保全局唯一实例
+ */
 class Application
 {
+private:
+    // 构造函数设为私有，防止外部实例化
+    Application() = default;
+    ~Application() = default;
+
+    // 单例实例指针
+    static std::unique_ptr<Application> mInstance;
+    static std::mutex mInstanceMutex;
+
 public:
-    ~Application();
-    // 友元声明，允许std::make_unique访问私有构造函数
+    // 禁用拷贝/移动（杜绝实例被复制）
+    Application(const Application&) = delete;
+    Application(Application&&) = delete;
+    Application& operator=(const Application&) = delete;
+    Application& operator=(Application&&) = delete;
+
+    // 友元声明，允许std::make_unique和std::unique_ptr访问私有构造和析构函数
     friend std::unique_ptr<Application> std::make_unique<Application>();
-    // 获取单例实例
-    static Application* GetInstance();
+    friend std::unique_ptr<Application>::deleter_type;
+
     // 初始化窗口
     bool WindowInit(const uint8_t& major = 4, const uint8_t& minor = 6, const uint32_t& width = 800, const uint32_t& height = 600, const char* title = "Window");
-    // 获取窗口宽度
-    uint32_t GetWindowWidth() const;
-    // 获取窗口高度
-    uint32_t GetWindowHeight() const;
-    // 获取鼠标位置
-    void GetCursorPos(double& x, double& y);
     // 更新窗口
     bool WindowUpdate() const;
+    // 更新窗口标题信息
+    void UpdateWindowTitleInfo(const char* title, const uint32_t& width, const uint32_t& height) const;
     // 销毁窗口
     void WindowDestroy() const;
-    // 设置窗口大小改变回调函数
-    void SetResizeCallback(ResizeCallback callback);
-    // 设置键盘输入回调函数
-    void SetKeyCallback(KeyBoardCallback callback);
-    // 添加鼠标事件回调函数设置
-    void SetMouseCallback(MouseButtonCallback callback);
-    void SetCursorCallback(MouseMoveCallback callback);
-    void SetScrollCallback(MouseScrollCallback callback);
 
 private:
     /* @note: 需要用static，静态成员函数没有隐式的this指针（C++类内函数指针）:
@@ -78,7 +82,7 @@ private:
      *@param xpos: X坐标位置
      *@param ypos: Y坐标位置
      */
-    static void MouseMoveCallbackFunc(GLFWwindow* window, double xpos, double ypos);
+    static void CursorPosCallbackFunc(GLFWwindow* window, double xpos, double ypos);
     /* 鼠标滚轮回调函数
      *@param window: 窗口对象指针
      *@param xoffset: X方向偏移
@@ -86,17 +90,32 @@ private:
      */
     static void MouseScrollCallbackFunc(GLFWwindow* window, double xoffset, double yoffset);
 
+public:
+    // 获取单例实例
+    static Application* GetInstance();
+    // 获取窗口宽度
+    uint32_t GetWindowWidth() const;
+    // 获取窗口高度
+    uint32_t GetWindowHeight() const;
+    // 获取鼠标位置
+    void GetCursorPos(double& x, double& y) const;
+
+    // 设置窗口大小改变回调函数
+    void SetResizeCallback(ResizeCallback callback);
+    // 设置键盘输入回调函数
+    void SetKeyCallback(KeyBoardCallback callback);
+    // 添加鼠标事件回调函数设置
+    void SetMouseCallback(MouseButtonCallback callback);
+    void SetCursorCallback(MouseMoveCallback callback);
+    void SetScrollCallback(MouseScrollCallback callback);
+
 private:
-    // 构造函数设为私有，防止外部实例化
-    Application();
-    // 单例实例指针
-    static std::unique_ptr<Application> mInstance;
-    static std::mutex mInstanceMutex;
     // 窗口
     GLFWwindow* mWindow = nullptr;
     uint32_t mWidth = 0;
     uint32_t mHeight = 0;
     const char* mTitle = nullptr;
+
     // 事件响应
     ResizeCallback mResizeCallback = nullptr;
     KeyBoardCallback mKeyCallback = nullptr;
@@ -106,4 +125,4 @@ private:
 };
 
 
-#endif //APPLICATON_H
+#endif //APPLICATION_H
