@@ -151,42 +151,34 @@ std::shared_ptr<Geometry> Geometry::CreateCube(float length, float width, float 
     glGenBuffers(1, &geometry->mPosVBO);
     glBindBuffer(GL_ARRAY_BUFFER, geometry->mPosVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
-
     // 颜色 VBO
     glGenBuffers(1, &geometry->mColorVBO);
     glBindBuffer(GL_ARRAY_BUFFER, geometry->mColorVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
-
     // UV VBO
     glGenBuffers(1, &geometry->mUvVBO);
     glBindBuffer(GL_ARRAY_BUFFER, geometry->mUvVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(uvs), uvs, GL_STATIC_DRAW);
-
-    // 索引 VBO
+    // 索引 EBO
     GLuint& mEBO = geometry->mEBO;
     glGenBuffers(1, &mEBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mEBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, geometry->mEBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
     // VAO
     glGenVertexArrays(1, &geometry->mVAO);
     glBindVertexArray(geometry->mVAO);
-
     // 位置属性
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, geometry->mPosVBO);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void *>(nullptr));
-
     // 颜色属性
     glEnableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, geometry->mColorVBO);
     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), static_cast<void *>(nullptr));
-
     // UV 属性
     glEnableVertexAttribArray(2);
     glBindBuffer(GL_ARRAY_BUFFER, geometry->mUvVBO);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), static_cast<void *>(nullptr));
-
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, geometry->mEBO);
 
     // 解绑VAO
@@ -283,7 +275,7 @@ std::shared_ptr<Geometry> Geometry::CreateSphere(float radius)
     CHECK_GL_ERROR(glGenBuffers(1, &geometry->mUvVBO));
     CHECK_GL_ERROR(glBindBuffer(GL_ARRAY_BUFFER, geometry->mUvVBO));
     CHECK_GL_ERROR(glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(GLfloat), uvs.data(), GL_STATIC_DRAW));
-    // 索引 VBO
+    // 索引 EBO
     CHECK_GL_ERROR(glGenBuffers(1, &geometry->mEBO));
     CHECK_GL_ERROR(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, geometry->mEBO));
     CHECK_GL_ERROR(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW));

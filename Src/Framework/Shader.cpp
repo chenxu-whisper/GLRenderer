@@ -56,31 +56,65 @@ void Shader::LoadCompileShader(const std::string& vertexShaderPath, const std::s
     GLuint vertexShader = 0;
     GLuint fragmentShader = 0;
 
-    // 创建顶点/片元着色器
+    /*
+     * @brief 创建顶点/片段着色器对象，返回编号（句柄）
+     * @param type: 要创建的着色器类型（GL_VERTEX_SHADER或GL_FRAGMENT_SHADER）
+     * @return GLuint: 创建的着色器对象句柄
+     */
     CHECK_GL_ERROR(vertexShader = glCreateShader(GL_VERTEX_SHADER));
     CHECK_GL_ERROR(fragmentShader = glCreateShader(GL_FRAGMENT_SHADER));
-    // 设置顶点/片元着色器源码
+
+    /*
+     * @brief 设置顶点/片段着色器源码
+     * @param shader: 要设置源码的着色器对象句柄
+     * @param count: 源码字符串数组的元素数量（这里为1）
+     * @param strings: 源码字符串数组指针
+     * @param lengths: 源码字符串数组每个元素的长度指针（这里为nullptr）
+     */
     CHECK_GL_ERROR(glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr));
     CHECK_GL_ERROR(glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr));
-    // 编译顶点/片元着色器
+    /*
+     * @brief 编译顶点/片段着色器对象
+     * @param shader: 要编译的着色器对象句柄
+     */
     CHECK_GL_ERROR(glCompileShader(vertexShader));
     CHECK_GL_ERROR(glCompileShader(fragmentShader));
 
-    // 检查顶点/片元着色器编译是否成功
+    /*
+     * @brief 检查顶点/片段着色器编译是否成功
+     * @param shader: 要检查的着色器对象句柄
+     * @param targetType: 目标类型字符串（"COMPILE"）
+     */
     CheckShaderError(vertexShader, "COMPILE");
     CheckShaderError(fragmentShader, "COMPILE");
 
-    // 创建着色器程序
+    /*
+     * @brief 创建着色器程序对象，返回编号（句柄）
+     * @return GLuint: 创建的着色器程序对象句柄
+     */
     CHECK_GL_ERROR(mShaderProgram = glCreateProgram());
-    // 绑定顶点着色器和片段着色器到着色器程序
+    /*
+     * @brief 绑定顶点着色器和片段着色器到着色器程序对象
+     * @param program: 要绑定着色器的着色器程序对象句柄
+     * @param shader: 要绑定的着色器对象句柄
+     */
     CHECK_GL_ERROR(glAttachShader(mShaderProgram, vertexShader));
     CHECK_GL_ERROR(glAttachShader(mShaderProgram, fragmentShader));
-    // 链接着色器程序
+    /*
+     * @brief 链接着色器程序对象
+     */
     CHECK_GL_ERROR(glLinkProgram(mShaderProgram));
-    // 检查着色器程序链接是否成功
+    /*
+     * @brief 检查着色器程序链接是否成功
+     * @param program: 要检查的着色器程序对象句柄
+     * @param targetType: 目标类型字符串（"LINK"）
+     */
     CheckShaderError(mShaderProgram, "LINK");
 
-    // 删除着色器
+    /*
+     * @brief 删除顶点/片段着色器对象
+     * @param shader: 要删除的着色器对象句柄
+     */
     CHECK_GL_ERROR(glDeleteShader(vertexShader));
     CHECK_GL_ERROR(glDeleteShader(fragmentShader));
 }
@@ -95,17 +129,31 @@ void Shader::UseShaderProgram() const
 
 void Shader::EndShaderProgram() const
 {
+    /*
+     * @brief 解绑着色器程序，将当前OpenGL状态机的着色器程序ID设置为0，后续的绘制操作将不使用任何着色器
+     */
     CHECK_GL_ERROR(glUseProgram(0));
 }
 
 void Shader::SetFloatUniform(const std::string &name, float value) const
 {
+    /*
+     * @brief 设置浮点数类型的uniform变量值
+     * @param program: 要设置uniform变量值着色器程序对象句柄
+     * @param name: uniform变量的名称字符串
+     * @param value: 要设置的uniform变量值
+     */
     GLint location = glGetUniformLocation(mShaderProgram, name.c_str());
     if (location == -1)
     {
         std::cerr << "ERROR::SHADER::UNIFORM::NOT_FOUND - Name: " << name << std::endl;
         return;
     }
+    /*
+     * @brief 设置浮点数类型的uniform变量值
+     * @param location: uniform变量在着色器程序中的位置索引
+     * @param value: 要设置的uniform变量值
+     */
     CHECK_GL_ERROR(glUniform1f(location, value));
 }
 
@@ -117,6 +165,11 @@ void Shader::SetIntUniform(const std::string &name, int value) const
         std::cerr << "ERROR::SHADER::UNIFORM::NOT_FOUND - Name: " << name << std::endl;
         return;
     }
+    /*
+     * @brief 设置整数类型的uniform变量值
+     * @param location: uniform变量在着色器程序中的位置索引
+     * @param value: 要设置的uniform变量值
+     */
     CHECK_GL_ERROR(glUniform1i(location, value));
 }
 
@@ -139,6 +192,12 @@ void Shader::SetVec4Uniform(const std::string &name, const glm::vec4 &value) con
         std::cerr << "ERROR::SHADER::UNIFORM::NOT_FOUND - Name: " << name << std::endl;
         return;
     }
+    /*
+     * @brief 设置4维向量类型的uniform变量值
+     * @param location: uniform变量在着色器程序中的位置索引
+     * @param count: 要设置的uniform变量数量，这里是1个
+     * @param value: 指向向量数据的指针，这里是value的地址
+     */
     CHECK_GL_ERROR(glUniform4fv(location, 1, &value[0]));
 }
 
@@ -166,6 +225,10 @@ void Shader::CheckShaderError(GLuint target, const std::string& targetType)
 
     if (targetType == "COMPILE")
     {
+        /*
+         * @brief 检查顶点/片段着色器编译是否成功
+         * @param shader: 要检查的着色器对象句柄
+         */
         CHECK_GL_ERROR(glGetShaderiv(target, GL_COMPILE_STATUS, &success));
         if (!success)
         {
@@ -175,6 +238,10 @@ void Shader::CheckShaderError(GLuint target, const std::string& targetType)
     }
     else if (targetType == "LINK")
     {
+        /*
+         * @brief 检查着色器程序链接是否成功
+         * @param program: 要检查的着色器程序对象句柄
+         */
         CHECK_GL_ERROR(glGetProgramiv(target, GL_LINK_STATUS, &success));
         if (!success)
         {

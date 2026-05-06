@@ -676,11 +676,11 @@ $M_{4×4} = \begin{bmatrix}
          2. 在推导透视投影矩阵时，我们的核心目标就是：$x_{ndc} = x_p$、$y_{ndc} = y_p$，也就是$x_{ndc} = \frac{-n \cdot x_e}{z_e}$、$y_{ndc} = \frac{-n \cdot y_e}{z_e}$  <br><br>
             这意味着：
             * 透视除法后的NDC坐标，正好等于近平面上的投影坐标 $x_p$,$y_p$。
-            * 我们构造矩阵时，就是为了让这个等式成立，所以$x_c$,$y_c$,$w_c$ 的选择$（x_c = -n \cdot x_e, y_c = -n \cdot y_e, w_c = -z_e）$，本质上就是为了让$\frac{x_c}{w_c}$ 还原出$x_p$。 <br>
-            则得构造矩阵：$P_{\text{persp→ortho}} = \begin{bmatrix} n & 0 & 0 & 0 \\ 
-                                                                 0 & n & 0 & 0 \\ 
-                                                                 0 & 0 & A & B \\ 
-                                                                 0 & 0 & -1 & 0 \end{bmatrix}$  <br><br>
+              * 我们构造矩阵时，就是为了让这个等式成立，所以$x_c$,$y_c$,$w_c$ 的选择$（x_c = -n \cdot x_e, y_c = -n \cdot y_e, w_c = -z_e）$，本质上就是为了让$\frac{x_c}{w_c}$ 还原出$x_p$。 <br>
+              则得构造矩阵：$P_{\text{persp→ortho}} = \begin{bmatrix} n & 0 & 0 & 0 \\ 
+                                                                   0 & n & 0 & 0 \\ 
+                                                                   0 & 0 & A & B \\ 
+                                                                   0 & 0 & -1 & 0 \end{bmatrix}$  <br><br>
          3. 推导$P_{persp→ortho}$矩阵的第三行, 要满足两个边界：
             * 近平面$z_{eye} = -n$，映射后深度不变。
             * 远平面$z_{eye} = -f$，映射后深度不变。
@@ -770,7 +770,8 @@ $M_{4×4} = \begin{bmatrix}
   // 从 CPU 传入的 MVP 矩阵（uniform 表示全局变量）
   uniform mat4 mvp;
   
-  void main() {
+  void main() 
+  {
       // 核心：顶点变换（齐次坐标乘法）
       gl_Position = mvp * vec4(aPos, 1.0f);
   }
